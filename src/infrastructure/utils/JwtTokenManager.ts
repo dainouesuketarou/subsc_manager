@@ -25,7 +25,7 @@ export class JwtTokenManager {
   static verifyToken(token: string): JwtPayload {
     try {
       return jwt.verify(token, this.SECRET_KEY) as JwtPayload;
-    } catch (error) {
+    } catch {
       throw new Error('Invalid token');
     }
   }
@@ -36,7 +36,7 @@ export class JwtTokenManager {
   static decodeToken(token: string): JwtPayload | null {
     try {
       return jwt.decode(token) as JwtPayload;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

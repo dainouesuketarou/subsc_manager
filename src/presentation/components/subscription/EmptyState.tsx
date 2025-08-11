@@ -1,12 +1,11 @@
 import React from 'react';
 
 interface EmptyStateProps {
-  user: any;
+  user: { email: string } | null;
   onAddSubscription: () => void;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  user,
   onAddSubscription,
 }) => {
   return (

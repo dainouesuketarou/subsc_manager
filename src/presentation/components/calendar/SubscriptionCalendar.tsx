@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { SubscriptionData } from '../../types/subscription';
 
 interface SubscriptionCalendarProps {
@@ -13,18 +13,21 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // 現在の月の最初の日と最後の日を取得
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
+  const firstDayOfMonth = useMemo(
+    () => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+    [currentDate]
   );
-  const lastDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
+
+  const lastDayOfMonth = useMemo(
+    () => new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0),
+    [currentDate]
   );
-  const startDate = new Date(firstDayOfMonth);
-  startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay());
+
+  const startDate = useMemo(() => {
+    const date = new Date(firstDayOfMonth);
+    date.setDate(date.getDate() - firstDayOfMonth.getDay());
+    return date;
+  }, [firstDayOfMonth]);
 
   // カレンダーに表示する日付の配列を生成
   const calendarDays = useMemo(() => {
@@ -40,102 +43,105 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
   }, [startDate, lastDayOfMonth]);
 
   // 指定された日の支払い予定を計算
-  const getPaymentsForDate = (date: Date): SubscriptionData[] => {
-    // デバッグ用ログ
-    console.log('Checking payments for date:', date.toDateString());
-    console.log('Subscriptions:', subscriptions);
+  const getPaymentsForDate = useCallback(
+    (date: Date): SubscriptionData[] => {
+      // デバッグ用ログ
+      console.log('Checking payments for date:', date.toDateString());
+      console.log('Subscriptions:', subscriptions);
 
-    return subscriptions.filter(subscription => {
-      // paymentStartDateが文字列の場合はDateオブジェクトに変換
-      const startDate =
-        subscription.paymentStartDate instanceof Date
-          ? subscription.paymentStartDate
-          : new Date(subscription.paymentStartDate);
+      return subscriptions.filter(subscription => {
+        // paymentStartDateが文字列の場合はDateオブジェクトに変換
+        const startDate =
+          subscription.paymentStartDate instanceof Date
+            ? subscription.paymentStartDate
+            : new Date(subscription.paymentStartDate);
 
-      // Invalid Dateの場合はスキップ
-      if (isNaN(startDate.getTime())) {
-        console.warn(
-          'Invalid paymentStartDate:',
-          subscription.paymentStartDate
-        );
-        return false;
-      }
-
-      // 日付のみで比較するため、時間部分を除去
-      const dateOnly = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-      );
-      const startDateOnly = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate()
-      );
-
-      // 支払い開始日より前の場合は支払いなし
-      if (dateOnly < startDateOnly) {
-        console.log(
-          `${subscription.name}: Date ${dateOnly.toDateString()} is before start date ${startDateOnly.toDateString()}`
-        );
-        return false;
-      }
-
-      // 支払い開始日は必ず支払い日
-      if (dateOnly.getTime() === startDateOnly.getTime()) {
-        console.log(
-          `${subscription.name}: Date ${dateOnly.toDateString()} is the start date`
-        );
-        return true;
-      }
-
-      const result = (() => {
-        switch (subscription.paymentCycle) {
-          case 'DAILY':
-            return true;
-          case 'MONTHLY': {
-            // 支払い開始日以降の同じ日付が支払い日
-            const isPaymentDay = date.getDate() === startDate.getDate();
-            console.log(
-              `Monthly check for ${subscription.name}: date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
-            );
-            return isPaymentDay;
-          }
-          case 'SEMI_ANNUALLY': {
-            // 支払い開始日以降の6ヶ月ごとの同じ日付が支払い日
-            const monthsDiff =
-              (date.getFullYear() - startDate.getFullYear()) * 12 +
-              (date.getMonth() - startDate.getMonth());
-            const isPaymentDay =
-              monthsDiff >= 0 &&
-              date.getDate() === startDate.getDate() &&
-              monthsDiff % 6 === 0;
-            console.log(
-              `Semi-annually check for ${subscription.name}: monthsDiff=${monthsDiff}, date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
-            );
-            return isPaymentDay;
-          }
-          case 'ANNUALLY': {
-            // 支払い開始日以降の毎年の同じ月日が支払い日
-            const yearsDiff = date.getFullYear() - startDate.getFullYear();
-            const isPaymentDay =
-              yearsDiff >= 0 &&
-              date.getDate() === startDate.getDate() &&
-              date.getMonth() === startDate.getMonth();
-            console.log(
-              `Annually check for ${subscription.name}: yearsDiff=${yearsDiff}, date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
-            );
-            return isPaymentDay;
-          }
-          default:
-            return false;
+        // Invalid Dateの場合はスキップ
+        if (isNaN(startDate.getTime())) {
+          console.warn(
+            'Invalid paymentStartDate:',
+            subscription.paymentStartDate
+          );
+          return false;
         }
-      })();
 
-      console.log(`Final result for ${subscription.name}: ${result}`);
-      return result;
-    });
-  };
+        // 日付のみで比較するため、時間部分を除去
+        const dateOnly = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+        const startDateOnly = new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          startDate.getDate()
+        );
+
+        // 支払い開始日より前の場合は支払いなし
+        if (dateOnly < startDateOnly) {
+          console.log(
+            `${subscription.name}: Date ${dateOnly.toDateString()} is before start date ${startDateOnly.toDateString()}`
+          );
+          return false;
+        }
+
+        // 支払い開始日は必ず支払い日
+        if (dateOnly.getTime() === startDateOnly.getTime()) {
+          console.log(
+            `${subscription.name}: Date ${dateOnly.toDateString()} is the start date`
+          );
+          return true;
+        }
+
+        const result = (() => {
+          switch (subscription.paymentCycle) {
+            case 'DAILY':
+              return true;
+            case 'MONTHLY': {
+              // 支払い開始日以降の同じ日付が支払い日
+              const isPaymentDay = date.getDate() === startDate.getDate();
+              console.log(
+                `Monthly check for ${subscription.name}: date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
+              );
+              return isPaymentDay;
+            }
+            case 'SEMI_ANNUALLY': {
+              // 支払い開始日以降の6ヶ月ごとの同じ日付が支払い日
+              const monthsDiff =
+                (date.getFullYear() - startDate.getFullYear()) * 12 +
+                (date.getMonth() - startDate.getMonth());
+              const isPaymentDay =
+                monthsDiff >= 0 &&
+                date.getDate() === startDate.getDate() &&
+                monthsDiff % 6 === 0;
+              console.log(
+                `Semi-annually check for ${subscription.name}: monthsDiff=${monthsDiff}, date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
+              );
+              return isPaymentDay;
+            }
+            case 'ANNUALLY': {
+              // 支払い開始日以降の毎年の同じ月日が支払い日
+              const yearsDiff = date.getFullYear() - startDate.getFullYear();
+              const isPaymentDay =
+                yearsDiff >= 0 &&
+                date.getDate() === startDate.getDate() &&
+                date.getMonth() === startDate.getMonth();
+              console.log(
+                `Annually check for ${subscription.name}: yearsDiff=${yearsDiff}, date=${date.getDate()}, startDate=${startDate.getDate()}, result=${isPaymentDay}`
+              );
+              return isPaymentDay;
+            }
+            default:
+              return false;
+          }
+        })();
+
+        console.log(`Final result for ${subscription.name}: ${result}`);
+        return result;
+      });
+    },
+    [subscriptions]
+  );
 
   // 月の合計支払額を計算
   const monthlyTotal = useMemo(() => {
@@ -150,7 +156,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
     }
 
     return total;
-  }, [subscriptions, currentDate, lastDayOfMonth]);
+  }, [subscriptions, currentDate, lastDayOfMonth, getPaymentsForDate]);
 
   // 前月・次月に移動
   const goToPreviousMonth = () => {
@@ -184,61 +190,6 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
       style: 'currency',
       currency: currency,
     }).format(amount);
-  };
-
-  // 次回支払日を計算する関数
-  const getNextPaymentDate = (subscription: SubscriptionData): Date => {
-    // paymentStartDateが文字列の場合はDateオブジェクトに変換
-    const startDate =
-      subscription.paymentStartDate instanceof Date
-        ? subscription.paymentStartDate
-        : new Date(subscription.paymentStartDate);
-
-    // Invalid Dateの場合は今日の日付を返す
-    if (isNaN(startDate.getTime())) {
-      console.warn('Invalid paymentStartDate:', subscription.paymentStartDate);
-      return new Date();
-    }
-
-    const today = new Date();
-
-    // 今日が支払い開始日より前の場合は開始日を返す
-    if (today < startDate) {
-      return startDate;
-    }
-
-    switch (subscription.paymentCycle) {
-      case 'DAILY':
-        return new Date(today.getTime() + 24 * 60 * 60 * 1000); // 明日
-      case 'MONTHLY': {
-        const nextMonth = new Date(today);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        nextMonth.setDate(startDate.getDate());
-        return nextMonth;
-      }
-      case 'SEMI_ANNUALLY': {
-        const nextDate = new Date(today);
-        const monthsDiff =
-          (nextDate.getMonth() - startDate.getMonth() + 12) % 12;
-        if (monthsDiff < 6) {
-          nextDate.setMonth(startDate.getMonth() + 6);
-        } else {
-          nextDate.setFullYear(nextDate.getFullYear() + 1);
-          nextDate.setMonth(startDate.getMonth());
-        }
-        nextDate.setDate(startDate.getDate());
-        return nextDate;
-      }
-      case 'ANNUALLY': {
-        const nextDate = new Date(today);
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        nextDate.setMonth(startDate.getMonth());
-        nextDate.setDate(startDate.getDate());
-        return nextDate;
-      }
-      default:
-        return startDate;
-    }
   };
 
   return (

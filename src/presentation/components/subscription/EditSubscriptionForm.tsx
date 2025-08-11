@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGuestSubscriptions } from '../../contexts/GuestSubscriptionContext';
 import { SubscriptionData } from '../../types/subscription';
 

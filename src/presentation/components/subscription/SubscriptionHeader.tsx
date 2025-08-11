@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface SubscriptionHeaderProps {
-  user: any;
+  user: { email: string } | null;
   onLogout: () => void;
   onLogin: () => void;
   onAddSubscription: () => void;

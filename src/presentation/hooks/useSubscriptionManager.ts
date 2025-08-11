@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGuestSubscriptions } from '../contexts/GuestSubscriptionContext';
 import { SubscriptionData } from '../types/subscription';
@@ -16,9 +16,9 @@ export const useSubscriptionManager = () => {
 
   useEffect(() => {
     fetchSubscriptions();
-  }, [user, token]);
+  }, [fetchSubscriptions]);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     try {
       if (!user || !token) {
         setSubscriptions([]);
@@ -43,7 +43,7 @@ export const useSubscriptionManager = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, token]);
 
   const deleteSubscription = async (subscription: SubscriptionData) => {
     if (user) {
