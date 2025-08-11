@@ -10,6 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: ['.github/**/*', '**/.github/**/*', '**/*.yml', '**/*.yaml'],
+  },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   ...compat.extends('prettier'),
   ...compat.plugins('prettier'),
@@ -17,9 +20,6 @@ const eslintConfig = [
     rules: {
       'prettier/prettier': 'error',
     },
-  },
-  {
-    ignores: ['.github/**/*'],
   },
 ];
 

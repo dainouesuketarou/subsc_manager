@@ -74,8 +74,6 @@ jobs:
   # Snyk セキュリティスキャン
   snyk-scan:
     runs-on: ubuntu-latest
-    # Snykトークンが設定されている場合のみ実行
-    if: ${{ secrets.SNYK_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -126,17 +124,17 @@ jobs:
             echo "❌ Potential hardcoded passwords found"
             exit 1
           fi
-          
+
           if grep -r -i "api.*key.*=.*['\"][^'\"]*['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
             echo "❌ Potential hardcoded API keys found"
             exit 1
           fi
-          
+
           if grep -r -i "token.*=.*['\"][^'\"]*['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
             echo "❌ Potential hardcoded tokens found"
             exit 1
           fi
-          
+
           echo "✅ No hardcoded secrets found"
 
       - name: Check for SQL injection vulnerabilities
@@ -178,7 +176,7 @@ jobs:
       - name: Check for outdated packages
         run: |
           npm outdated --json > outdated-packages.json || true
-          
+
           if [ -s outdated-packages.json ]; then
             echo "📦 Outdated packages found:"
             cat outdated-packages.json
