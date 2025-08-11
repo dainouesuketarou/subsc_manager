@@ -14,10 +14,6 @@ export const useSubscriptionManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [fetchSubscriptions]);
-
   const fetchSubscriptions = useCallback(async () => {
     try {
       if (!user || !token) {
@@ -44,6 +40,10 @@ export const useSubscriptionManager = () => {
       setIsLoading(false);
     }
   }, [user, token]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
 
   const deleteSubscription = async (subscription: SubscriptionData) => {
     if (user) {
