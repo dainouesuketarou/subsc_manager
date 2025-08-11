@@ -14,9 +14,7 @@ describe('/api/subscriptions', () => {
   describe('GET', () => {
     it('認証ヘッダーがない場合、エラーを返す', async () => {
       // 動的インポートでモジュールを取得
-      const { GET } = await import(
-        '../../../../src/app/api/subscriptions/route'
-      );
+      const { GET } = await import('@app/api/subscriptions/route');
 
       const url = new URL('http://localhost:3000/api/subscriptions');
       const request = new NextRequest(url);
@@ -32,9 +30,7 @@ describe('/api/subscriptions', () => {
   describe('POST', () => {
     it('認証ヘッダーがない場合、エラーを返す', async () => {
       // 動的インポートでモジュールを取得
-      const { POST } = await import(
-        '../../../../src/app/api/subscriptions/route'
-      );
+      const { POST } = await import('@app/api/subscriptions/route');
 
       const requestBody = {
         name: 'Netflix',

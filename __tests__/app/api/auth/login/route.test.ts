@@ -13,9 +13,7 @@ describe('/api/auth/login', () => {
   describe('POST', () => {
     it('必須フィールドが不足している場合、エラーを返す', async () => {
       // 動的インポートでモジュールを取得
-      const { POST } = await import(
-        '../../../../../src/app/api/auth/login/route'
-      );
+      const { POST } = await import('@app/api/auth/login/route');
 
       const requestBody = {
         email: 'test@example.com',

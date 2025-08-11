@@ -8,6 +8,7 @@ export default {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@app/(.*)$': '<rootDir>/app/$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',
