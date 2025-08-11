@@ -75,7 +75,7 @@ export class UpdateSubscriptionUseCase {
         ? new Date(paymentStartDate)
         : existingSubscription.toDTO().paymentStartDate,
       subscribedAt: existingSubscription.toDTO().subscribedAt,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     });
 
     // サブスクリプションを更新

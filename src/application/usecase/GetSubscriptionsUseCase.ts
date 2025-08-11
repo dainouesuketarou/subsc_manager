@@ -46,7 +46,7 @@ export class GetSubscriptionsUseCase {
         category: dto.category.getValue(),
         paymentStartDate: dto.paymentStartDate,
         subscribedAt: dto.subscribedAt,
-        updatedAt: dto.updated_at,
+        updatedAt: dto.updatedAt,
       };
     });
 

@@ -52,7 +52,7 @@ describe('PrismaSubscriptionRepository', () => {
           category: dto.category.getValue(),
           payment_start_date: dto.paymentStartDate,
           subscribed_at: dto.subscribedAt,
-          updated_at: dto.updated_at,
+          updated_at: dto.updatedAt,
         },
       });
     });
@@ -84,7 +84,7 @@ describe('PrismaSubscriptionRepository', () => {
           category: dto.category.getValue(),
           payment_start_date: paymentStartDate,
           subscribed_at: dto.subscribedAt,
-          updated_at: dto.updated_at,
+          updated_at: dto.updatedAt,
         },
       });
     });

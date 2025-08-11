@@ -10,7 +10,7 @@ describe('Money', () => {
 
     it('無効な通貨でエラーを投げる', () => {
       expect(() => Money.create(1000, 'INVALID')).toThrow(
-        'Invalid currency: INVALID'
+        '無効な通貨です: INVALID. 有効な通貨: JPY, USD, EUR'
       );
     });
   });
