@@ -190,7 +190,8 @@ jobs:
         run: npm audit --audit-level=moderate
 
       - name: Run Snyk security scan (optional)
-        if: secrets.SNYK_TOKEN
+        # Snykトークンが設定されている場合のみ実行
+        if: ${{ secrets.SNYK_TOKEN }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

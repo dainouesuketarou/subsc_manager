@@ -18,6 +18,9 @@ const eslintConfig = [
       'prettier/prettier': 'error',
     },
   },
+  {
+    ignores: ['.github/**/*'],
+  },
 ];
 
 export default eslintConfig;
