@@ -12,10 +12,12 @@ export class Money {
 
   constructor(amount: Amount, currency: Currency) {
     if (!Money.isValidAmount(amount)) {
-      throw new Error('Amount must be positive');
+      throw new Error(`金額は0以上である必要があります: ${amount}`);
     }
     if (!Money.isValidCurrency(currency)) {
-      throw new Error(`Invalid currency: ${currency}`);
+      throw new Error(
+        `無効な通貨です: ${currency}. 有効な通貨: ${Object.values(Currency).join(', ')}`
+      );
     }
     this.amount = amount;
     this.currency = currency;
@@ -31,8 +33,6 @@ export class Money {
   }
 
   static isValidCurrency(currency: string): currency is Currency {
-    // Object.values(Currency) は Currency 型の配列を返す -> 'JPY' | 'USD' | 'EUR'
-    // .includes(currency as Currency) は currency が Currency 型の配列に含まれているかどうかをチェック
     return Object.values(Currency).includes(currency as Currency);
   }
 }

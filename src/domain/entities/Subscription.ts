@@ -13,7 +13,7 @@ export type SubscriptionDTO = {
   category: SubscriptionCategoryValue;
   paymentStartDate: SubscriptionPaymentStartDate;
   subscribedAt: SubscriptionSubscribedAt;
-  updated_at: SubscriptionUpdatedAt;
+  updatedAt: SubscriptionUpdatedAt;
 };
 
 export type SubscriptionId = string;
@@ -31,7 +31,7 @@ export class Subscription {
   private readonly category: SubscriptionCategoryValue;
   private readonly paymentStartDate: SubscriptionPaymentStartDate;
   private readonly subscribedAt: SubscriptionSubscribedAt;
-  private readonly updated_at: SubscriptionUpdatedAt;
+  private readonly updatedAt: SubscriptionUpdatedAt;
 
   constructor(
     id: SubscriptionId,
@@ -42,7 +42,7 @@ export class Subscription {
     category: SubscriptionCategoryValue,
     paymentStartDate: SubscriptionPaymentStartDate,
     subscribedAt: SubscriptionSubscribedAt,
-    updated_at: SubscriptionUpdatedAt
+    updatedAt: SubscriptionUpdatedAt
   ) {
     this.id = id;
     this.userId = userId;
@@ -52,10 +52,9 @@ export class Subscription {
     this.category = category;
     this.paymentStartDate = paymentStartDate;
     this.subscribedAt = subscribedAt;
-    this.updated_at = updated_at;
+    this.updatedAt = updatedAt;
   }
 
-  // ★解決策1: DBから読み込んだデータでエンティティを復元する
   public static reconstitute(props: SubscriptionDTO): Subscription {
     return new Subscription(
       props.id,
@@ -66,11 +65,10 @@ export class Subscription {
       props.category,
       props.paymentStartDate,
       props.subscribedAt,
-      props.updated_at
+      props.updatedAt
     );
   }
 
-  // ★解決策2: エンティティの内部状態をDB保存用のDTOに変換する
   public toDTO(): SubscriptionDTO {
     return {
       id: this.id,
@@ -81,7 +79,7 @@ export class Subscription {
       category: this.category,
       paymentStartDate: this.paymentStartDate,
       subscribedAt: this.subscribedAt,
-      updated_at: this.updated_at,
+      updatedAt: this.updatedAt,
     };
   }
 

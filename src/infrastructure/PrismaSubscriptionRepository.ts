@@ -1,4 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import {
+  PrismaClient,
+  Subscription as PrismaSubscription,
+} from '@prisma/client';
 import { Subscription, SubscriptionDTO } from '../domain/entities/Subscription';
 import { ISubscriptionRepository } from '../domain/repositories/ISubscriptionRepository';
 import { Money } from '../domain/value-objects/Money';
@@ -21,7 +24,7 @@ export class PrismaSubscriptionRepository implements ISubscriptionRepository {
         category: dto.category.getValue(),
         payment_start_date: dto.paymentStartDate,
         subscribed_at: dto.subscribedAt,
-        updated_at: dto.updated_at,
+        updated_at: dto.updatedAt,
       },
     });
   }
@@ -35,30 +38,7 @@ export class PrismaSubscriptionRepository implements ISubscriptionRepository {
       return null;
     }
 
-    // バリデーション付きで安全に作成
-    const money = Money.create(
-      subscriptionData.price,
-      subscriptionData.currency
-    );
-    const paymentCycle = PaymentCycleValue.create(
-      subscriptionData.payment_cycle
-    );
-
-    const category = SubscriptionCategoryValue.create(
-      subscriptionData.category
-    );
-    const dto: SubscriptionDTO = {
-      id: subscriptionData.id,
-      userId: subscriptionData.user_id,
-      name: subscriptionData.name,
-      money: money,
-      paymentCycle: paymentCycle,
-      category: category,
-      paymentStartDate: subscriptionData.payment_start_date,
-      subscribedAt: subscriptionData.subscribed_at,
-      updated_at: subscriptionData.updated_at,
-    };
-    return Subscription.reconstitute(dto);
+    return this.convertToSubscription(subscriptionData);
   }
 
   async findByUserId(userId: string): Promise<Subscription[]> {
@@ -66,25 +46,7 @@ export class PrismaSubscriptionRepository implements ISubscriptionRepository {
       where: { user_id: userId },
     });
 
-    return subscriptionsData.map(data => {
-      // バリデーション付きで安全に作成
-      const money = Money.create(data.price, data.currency);
-      const paymentCycle = PaymentCycleValue.create(data.payment_cycle);
-      const category = SubscriptionCategoryValue.create(data.category);
-
-      const dto: SubscriptionDTO = {
-        id: data.id,
-        userId: data.user_id,
-        name: data.name,
-        money: money,
-        paymentCycle: paymentCycle,
-        category: category,
-        paymentStartDate: data.payment_start_date,
-        subscribedAt: data.subscribed_at,
-        updated_at: data.updated_at,
-      };
-      return Subscription.reconstitute(dto);
-    });
+    return subscriptionsData.map(data => this.convertToSubscription(data));
   }
 
   async update(subscription: Subscription): Promise<void> {
@@ -107,5 +69,24 @@ export class PrismaSubscriptionRepository implements ISubscriptionRepository {
     await this.prisma.subscription.delete({
       where: { id: subscriptionId },
     });
+  }
+
+  private convertToSubscription(data: PrismaSubscription): Subscription {
+    const money = Money.create(data.price, data.currency);
+    const paymentCycle = PaymentCycleValue.create(data.payment_cycle);
+    const category = SubscriptionCategoryValue.create(data.category);
+
+    const dto: SubscriptionDTO = {
+      id: data.id,
+      userId: data.user_id,
+      name: data.name,
+      money: money,
+      paymentCycle: paymentCycle,
+      category: category,
+      paymentStartDate: data.payment_start_date,
+      subscribedAt: data.subscribed_at,
+      updatedAt: data.updated_at,
+    };
+    return Subscription.reconstitute(dto);
   }
 }

@@ -9,7 +9,7 @@ export class PaymentCycleValue {
   public readonly value: PaymentCycle;
 
   constructor(value: PaymentCycle) {
-    if (!Object.values(PaymentCycle).includes(value)) {
+    if (!PaymentCycleValue.isValidPaymentCycle(value)) {
       throw new Error(`Invalid payment cycle: ${value}`);
     }
     this.value = value;
@@ -17,7 +17,7 @@ export class PaymentCycleValue {
 
   // ファクトリメソッドで安全な作成
   static create(cycle: string): PaymentCycleValue {
-    if (!Object.values(PaymentCycle).includes(cycle as PaymentCycle)) {
+    if (!PaymentCycleValue.isValidPaymentCycle(cycle)) {
       throw new Error(`Invalid payment cycle: ${cycle}`);
     }
     return new PaymentCycleValue(cycle as PaymentCycle);
