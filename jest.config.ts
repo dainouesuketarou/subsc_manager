@@ -1,4 +1,4 @@
-export default {
+const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>'],
@@ -16,3 +16,5 @@ export default {
     '!src/**/*.spec.ts',
   ],
 };
+
+export default config;
