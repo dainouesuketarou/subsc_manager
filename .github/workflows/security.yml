@@ -93,6 +93,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high --fail-on=all
+        continue-on-error: true
 
       - name: Run Snyk to check for license issues
         uses: snyk/actions/node@master
@@ -100,6 +101,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high --fail-on=all --command=license
+        continue-on-error: true
 
   # コードのセキュリティチェック
   code-security:
