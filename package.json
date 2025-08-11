@@ -9,10 +9,14 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "db:seed": "npx prisma db seed"
+    "db:seed": "npx prisma db seed",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:migrate": "npx prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
