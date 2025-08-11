@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// @seed="npx tsx prisma/seed.ts"
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password_hash String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  subscriptions Subscription[]
+  blacklistedTokens BlacklistedToken[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model BlacklistedToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  user_id   String
+  user      User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  user_id   String
+  user      User     @relation(fields: [user_id], references: [id])
+  expires_at DateTime
+  created_at DateTime @default(now())
+}
+
+model Subscription {
+  id            String       @id @default(uuid())
+  user_id       String
+  user          User         @relation(fields: [user_id], references: [id])
+  name          String
+  price         Int
+  currency      Currency
+  payment_cycle PaymentCycle
+  category      SubscriptionCategory
+  payment_start_date DateTime @default(now())
+  subscribed_at DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+}
+
+// サブスクリプションの通貨(ユーザーが決めれる通貨)、円、ドル、ユーロなど
+enum Currency {
+  JPY // 円
+  USD // ドル
+  EUR // ユーロ
+}
+
+enum PaymentCycle {
+  DAILY // 毎日
+  MONTHLY // 毎月
+  SEMI_ANNUALLY // 毎半年
+  ANNUALLY // 毎年
+}
+
+enum SubscriptionCategory {
+  VIDEO_STREAMING // 動画配信
+  MUSIC_STREAMING // 音楽配信
+  READING // 読書
+  GAMING // ゲーム
+  FITNESS // フィットネス
+  EDUCATION // 教育
+  PRODUCTIVITY // 生産性
+  CLOUD_STORAGE // クラウドストレージ
+  SECURITY // セキュリティ
+  OTHER // その他
+}

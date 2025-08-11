@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+build
+coverage
+*.log
+.env*
+.DS_Store
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+prisma/migrations
