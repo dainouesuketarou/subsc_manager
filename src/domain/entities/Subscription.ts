@@ -2,6 +2,7 @@ import { Money } from '../value-objects/Money';
 import { PaymentCycleValue } from '../value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../value-objects/SubscriptionCategory';
 import { UserId } from './User';
+import crypto from 'crypto';
 
 export type SubscriptionDTO = {
   id: SubscriptionId;

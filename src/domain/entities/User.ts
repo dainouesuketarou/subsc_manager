@@ -1,4 +1,5 @@
 import { Email } from '../value-objects/Email';
+import crypto from 'crypto';
 
 export type UserDTO = {
   id: UserId;

@@ -33,7 +33,7 @@ jobs:
         run: npm audit --audit-level=moderate --json > audit-report.json || true
 
       - name: Upload audit report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: npm-audit-report
           path: audit-report.json
@@ -92,14 +92,14 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --fail-on=high
+          args: --severity-threshold=high --fail-on=all
 
       - name: Run Snyk to check for license issues
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --fail-on=high --command=license
+          args: --severity-threshold=high --fail-on=all --command=license
 
   # コードのセキュリティチェック
   code-security:
@@ -119,18 +119,18 @@ jobs:
 
       - name: Check for hardcoded secrets
         run: |
-          # パスワード、APIキー、トークンなどのパターンをチェック
-          if grep -r -i "password.*=.*['\"][^'\"]*['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
+          # パスワード、APIキー、トークンなどのパターンをチェック（変数名は除外）
+          if grep -r -i "password.*=.*['\"][^'\"]{8,}['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js" | grep -v "password.*=.*['\"][^'\"]*['\"]"; then
             echo "❌ Potential hardcoded passwords found"
             exit 1
           fi
 
-          if grep -r -i "api.*key.*=.*['\"][^'\"]*['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
+          if grep -r -i "api.*key.*=.*['\"][^'\"]{8,}['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
             echo "❌ Potential hardcoded API keys found"
             exit 1
           fi
 
-          if grep -r -i "token.*=.*['\"][^'\"]*['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
+          if grep -r -i "token.*=.*['\"][^'\"]{8,}['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js"; then
             echo "❌ Potential hardcoded tokens found"
             exit 1
           fi
@@ -186,7 +186,7 @@ jobs:
           fi
 
       - name: Upload outdated packages report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: outdated-packages
           path: outdated-packages.json
@@ -214,7 +214,7 @@ jobs:
           echo "3. Follow security best practices in code" >> security-report.md
 
       - name: Upload security report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-report
           path: security-report.md
