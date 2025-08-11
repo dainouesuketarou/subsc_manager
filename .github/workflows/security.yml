@@ -5,9 +5,9 @@ on:
     # 毎週月曜日の午前9時に実行
     - cron: '0 9 * * 1'
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   NODE_VERSION: '18'
@@ -74,6 +74,7 @@ jobs:
   # Snyk セキュリティスキャン
   snyk-scan:
     runs-on: ubuntu-latest
+    if: secrets.SNYK_TOKEN
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

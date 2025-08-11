@@ -2,7 +2,7 @@ name: Pull Request Checks
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   NODE_VERSION: '18'
@@ -85,9 +85,11 @@ jobs:
 
       - name: Setup test database
         run: |
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
           npx prisma generate
           npx prisma db push --schema=./prisma/schema.prisma
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NODE_ENV: test
 
       - name: Run tests
         run: npm test
