@@ -425,8 +425,8 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
                       key={payment.id}
                       className={`text-xs p-0.5 rounded ${getCategoryColor(payment.category)}`}
                     >
-                      <div className="flex flex-col items-center text-center">
-                        <span className="text-sm mb-0.5 hidden sm:inline">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-sm hidden sm:inline">
                           {getCategoryEmoji(payment.category)}
                         </span>
                         <span className="text-xs font-medium leading-tight">
