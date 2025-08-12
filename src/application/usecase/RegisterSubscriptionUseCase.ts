@@ -55,7 +55,7 @@ export class RegisterSubscriptionUseCase {
     }
 
     // PrismaのUserテーブルにレコードが存在するかチェック
-    let user: { getId: () => string } | null;
+    let user: { getId: () => string } | null = null;
     try {
       // まずSupabaseのユーザーIDで検索
       user = await this.userRepository.findBySupabaseUserId(userId);
