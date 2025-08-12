@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSubscriptionManager } from '../../hooks/useSubscriptionManager';
 import { SubscriptionHeader } from './SubscriptionHeader';
 import { SubscriptionTable } from './SubscriptionTable';
+import { SubscriptionCalendar } from '../calendar/SubscriptionCalendar';
 import { EmptyState } from './EmptyState';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
@@ -24,6 +25,8 @@ export const SubscriptionManagerContainer: React.FC = () => {
     fetchSubscriptions,
     deleteSubscription,
     getCategoryDisplayName,
+    getPaymentCycleDisplayName,
+    convertToJPY,
     getNextPaymentDate,
   } = useSubscriptionManager();
 
@@ -66,15 +69,20 @@ export const SubscriptionManagerContainer: React.FC = () => {
   };
 
   const handleAddSuccess = () => {
+    setIsAddModalOpen(false);
     if (user) {
       fetchSubscriptions();
     }
+    // ゲストユーザーの場合は、GuestSubscriptionContextが自動的に更新される
   };
 
   const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    setEditingSubscription(null);
     if (user) {
       fetchSubscriptions();
     }
+    // ゲストユーザーの場合は、GuestSubscriptionContextが自動的に更新される
   };
 
   if (isLoading) {
@@ -91,6 +99,17 @@ export const SubscriptionManagerContainer: React.FC = () => {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* サブスク追加ボタン */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-600 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+          >
+            <span>➕</span>
+            サブスクを追加
+          </button>
+        </div>
+
         <div className="bg-white rounded-lg shadow-xl overflow-hidden">
           <div className="px-6 py-8">
             {error && (
@@ -105,13 +124,27 @@ export const SubscriptionManagerContainer: React.FC = () => {
                 onAddSubscription={() => setIsAddModalOpen(true)}
               />
             ) : (
-              <SubscriptionTable
-                subscriptions={currentSubscriptions}
-                onEdit={handleEditSubscription}
-                onDelete={handleDeleteSubscription}
-                getCategoryDisplayName={getCategoryDisplayName}
-                getNextPaymentDate={getNextPaymentDate}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* カレンダー - 2/3の幅 */}
+                <div className="lg:col-span-2">
+                  <SubscriptionCalendar
+                    subscriptions={currentSubscriptions}
+                    getCategoryDisplayName={getCategoryDisplayName}
+                  />
+                </div>
+                {/* サブスク一覧 - 1/3の幅 */}
+                <div className="lg:col-span-1">
+                  <SubscriptionTable
+                    subscriptions={currentSubscriptions}
+                    onEdit={handleEditSubscription}
+                    onDelete={handleDeleteSubscription}
+                    getCategoryDisplayName={getCategoryDisplayName}
+                    getPaymentCycleDisplayName={getPaymentCycleDisplayName}
+                    convertToJPY={convertToJPY}
+                    getNextPaymentDate={getNextPaymentDate}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </div>

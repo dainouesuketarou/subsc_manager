@@ -1,11 +1,14 @@
 import React from 'react';
 import { SubscriptionData } from '../../types/subscription';
+import { ExchangeRateService } from '../../../infrastructure/services/ExchangeRateService';
 
 interface SubscriptionTableProps {
   subscriptions: SubscriptionData[];
   onEdit: (subscription: SubscriptionData) => void;
   onDelete: (subscription: SubscriptionData) => void;
   getCategoryDisplayName: (category: string) => string;
+  getPaymentCycleDisplayName: (paymentCycle: string) => string;
+  convertToJPY: (amount: number, currency: string) => Promise<number>;
   getNextPaymentDate: (subscription: SubscriptionData) => Date;
 }
 
@@ -14,76 +17,118 @@ export const SubscriptionTable: React.FC<SubscriptionTableProps> = ({
   onEdit,
   onDelete,
   getCategoryDisplayName,
+  getPaymentCycleDisplayName,
+  convertToJPY,
   getNextPaymentDate,
 }) => {
+  // subscriptionsがオブジェクトで、subscriptionsプロパティを持つ場合はそれを取得
+  const actualSubscriptions = Array.isArray(subscriptions)
+    ? subscriptions
+    : (subscriptions as { subscriptions?: SubscriptionData[] })
+        ?.subscriptions || [];
+
+  const [exchangeRates, setExchangeRates] = React.useState<
+    Record<string, number>
+  >({});
+
+  // 為替レートを取得
+  React.useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const rates = await ExchangeRateService.getExchangeRates();
+        setExchangeRates(rates);
+      } catch (error) {
+        console.warn('Failed to fetch exchange rates:', error);
+      }
+    };
+    fetchRates();
+  }, []);
+
+  // 同期的な通貨変換（キャッシュされた為替レートを使用）
+  const convertToJPYSync = React.useCallback(
+    (amount: number, currency: string): number => {
+      return amount * (exchangeRates[currency] || 1);
+    },
+    [exchangeRates]
+  );
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-          <tr>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <span className="emoji-icon">📱</span>
-              サービス名
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <span className="emoji-icon">💰</span>
-              料金
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <span className="emoji-icon">🔄</span>
-              支払いサイクル
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <span className="emoji-icon">📅</span>
-              次回支払日
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <span className="emoji-icon">⚙️</span>
-              操作
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {subscriptions.map(subscription => (
-            <tr
+    <div className="bg-white rounded-lg shadow-md p-4">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <span className="emoji-icon">📋</span>
+        サブスク一覧
+      </h3>
+      <div className="space-y-3">
+        {actualSubscriptions.map(subscription => {
+          const jpyAmount = convertToJPYSync(
+            subscription.price,
+            subscription.currency
+          );
+          return (
+            <div
               key={subscription.id}
-              className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
+              className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
             >
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                {subscription.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {subscription.price} {subscription.currency}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {subscription.paymentCycle}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {getCategoryDisplayName(subscription.category)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {getNextPaymentDate(subscription).toLocaleDateString('ja-JP')}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button
-                  onClick={() => onEdit(subscription)}
-                  className="text-blue-600 hover:text-blue-900 mr-4 transition-colors duration-200 hover-scale"
-                >
-                  <span className="emoji-icon">✏️</span>
-                  編集
-                </button>
-                <button
-                  onClick={() => onDelete(subscription)}
-                  className="text-red-600 hover:text-red-900 transition-colors duration-200 hover-scale"
-                >
-                  <span className="emoji-icon">🗑️</span>
-                  削除
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-semibold text-gray-900 text-sm">
+                  {subscription.name}
+                </h4>
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => onEdit(subscription)}
+                    className="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors"
+                    title="編集"
+                  >
+                    <span className="emoji-icon text-sm">✏️</span>
+                  </button>
+                  <button
+                    onClick={() => onDelete(subscription)}
+                    className="text-red-600 hover:text-red-900 p-1 rounded transition-colors"
+                    title="削除"
+                  >
+                    <span className="emoji-icon text-sm">🗑️</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                <div className="flex items-center gap-1">
+                  <span className="emoji-icon">💰</span>
+                  <span className="font-medium">
+                    ¥{jpyAmount.toLocaleString()}
+                  </span>
+                  {subscription.currency !== 'JPY' && (
+                    <span className="text-gray-400">
+                      ({subscription.price} {subscription.currency})
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <span className="emoji-icon">🔄</span>
+                  <span>
+                    {getPaymentCycleDisplayName(subscription.paymentCycle)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <span className="emoji-icon">📂</span>
+                  <span>{getCategoryDisplayName(subscription.category)}</span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <span className="emoji-icon">📅</span>
+                  <span>
+                    {getNextPaymentDate(subscription).toLocaleDateString(
+                      'ja-JP'
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

@@ -180,13 +180,15 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
           onChange={e => setCategory(e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-black font-medium hover-lift"
         >
-          <option value="STREAMING">ストリーミング</option>
-          <option value="MUSIC">音楽</option>
+          <option value="VIDEO_STREAMING">動画配信</option>
+          <option value="MUSIC_STREAMING">音楽配信</option>
+          <option value="READING">読書</option>
           <option value="GAMING">ゲーム</option>
-          <option value="PRODUCTIVITY">生産性</option>
           <option value="FITNESS">フィットネス</option>
           <option value="EDUCATION">教育</option>
-          <option value="NEWS">ニュース</option>
+          <option value="PRODUCTIVITY">生産性</option>
+          <option value="CLOUD_STORAGE">クラウドストレージ</option>
+          <option value="SECURITY">セキュリティ</option>
           <option value="OTHER">その他</option>
         </select>
       </div>
@@ -206,7 +208,8 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-black font-medium hover-lift"
         >
           <option value="MONTHLY">月額</option>
-          <option value="YEARLY">年額</option>
+          <option value="SEMI_ANNUALLY">半年払い</option>
+          <option value="ANNUALLY">年額</option>
           <option value="WEEKLY">週額</option>
           <option value="DAILY">日額</option>
         </select>
