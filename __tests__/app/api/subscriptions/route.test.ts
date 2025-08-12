@@ -1,5 +1,9 @@
 import { NextRequest } from 'next/server';
 
+// Supabaseの環境変数をモック
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+
 // モジュールのモック
 jest.mock('@prisma/client');
 jest.mock('../../../../src/infrastructure/PrismaSubscriptionRepository');

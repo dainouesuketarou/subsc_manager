@@ -8,12 +8,8 @@ import { ExchangeRateService } from '../../infrastructure/services/ExchangeRateS
 export const useSubscriptionManager = () => {
   const { user, signOut } = useUnifiedAuth();
   const { showLoading, hideLoading } = useLoading();
-  const {
-    subscriptions: guestSubscriptions,
-    addSubscription,
-    updateSubscription,
-    deleteSubscription,
-  } = useGuestSubscriptions();
+  const { subscriptions: guestSubscriptions, deleteSubscription } =
+    useGuestSubscriptions();
 
   const [currentSubscriptions, setCurrentSubscriptions] = useState<
     SubscriptionData[]

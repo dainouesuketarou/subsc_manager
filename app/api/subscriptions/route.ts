@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { PrismaSubscriptionRepository } from '../../../src/infrastructure/PrismaSubscriptionRepository';
 import { PrismaUserRepository } from '../../../src/infrastructure/PrismaUserRepository';

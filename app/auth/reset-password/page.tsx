@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
             'パスワードリセットリンクが無効です。再度リセットメールを送信してください。'
           );
         }
-      } catch (error) {
+      } catch {
         setError(
           'パスワードリセットリンクが無効です。再度リセットメールを送信してください。'
         );
@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
           router.push('/');
         }, 3000);
       }
-    } catch (error) {
+    } catch {
       setError('パスワードの更新に失敗しました。再度お試しください。');
     } finally {
       setIsLoading(false);

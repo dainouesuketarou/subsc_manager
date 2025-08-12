@@ -1,6 +1,5 @@
 import { ISubscriptionRepository } from '../../domain/repositories/ISubscriptionRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
-import { Subscription } from '../../domain/entities/Subscription';
 
 export interface GetSubscriptionsRequest {
   userId: string;

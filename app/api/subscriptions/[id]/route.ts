@@ -94,7 +94,7 @@ export async function PUT(
       userRepository
     );
 
-    const result = await updateSubscriptionUseCase.execute({
+    await updateSubscriptionUseCase.execute({
       subscriptionId,
       userId,
       name,

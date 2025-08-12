@@ -208,7 +208,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
         return result;
       });
     },
-    [subscriptions]
+    [actualSubscriptions]
   );
 
   // 月の合計支払額を計算
@@ -227,13 +227,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
     }
 
     return total;
-  }, [
-    actualSubscriptions,
-    currentDate,
-    lastDayOfMonth,
-    getPaymentsForDate,
-    convertToJPY,
-  ]);
+  }, [currentDate, lastDayOfMonth, getPaymentsForDate, convertToJPY]);
 
   // カテゴリー別の月間支払額を計算
   const monthlyTotalByCategory = useMemo(() => {
@@ -258,13 +252,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
     }
 
     return categoryTotals;
-  }, [
-    actualSubscriptions,
-    currentDate,
-    lastDayOfMonth,
-    getPaymentsForDate,
-    convertToJPY,
-  ]);
+  }, [currentDate, lastDayOfMonth, getPaymentsForDate, convertToJPY]);
 
   // 前月・次月に移動
   const goToPreviousMonth = () => {

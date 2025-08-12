@@ -117,7 +117,7 @@ export const AddSubscriptionForm: React.FC<AddSubscriptionFormProps> = ({
           );
         }
 
-        const newSubscription = await response.json();
+        await response.json();
 
         // 成功時は即座にモーダルを閉じる
         onClose();

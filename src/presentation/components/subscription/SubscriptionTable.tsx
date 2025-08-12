@@ -18,7 +18,6 @@ export const SubscriptionTable: React.FC<SubscriptionTableProps> = ({
   onDelete,
   getCategoryDisplayName,
   getPaymentCycleDisplayName,
-  convertToJPY,
   getNextPaymentDate,
 }) => {
   // subscriptionsがオブジェクトで、subscriptionsプロパティを持つ場合はそれを取得

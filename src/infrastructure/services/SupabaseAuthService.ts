@@ -164,7 +164,7 @@ export class SupabaseAuthService {
           : null,
         session: data.session,
       };
-    } catch (error) {
+    } catch {
       return {
         user: null,
         session: null,

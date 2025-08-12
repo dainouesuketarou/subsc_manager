@@ -114,7 +114,7 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
           );
         }
 
-        const updatedSubscription = await response.json();
+        await response.json();
 
         // 成功時は即座にモーダルを閉じる
         onClose();
