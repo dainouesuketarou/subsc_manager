@@ -10,13 +10,14 @@
 - カテゴリー別の分類と色分け表示
 - 月間支払額の合計表示
 - レスポンシブデザイン対応
+- **Supabase認証**（Email/Password）
 
 ## 技術スタック
 
 - **フロントエンド**: Next.js 14, React, TypeScript, Tailwind CSS
 - **バックエンド**: Next.js API Routes
-- **データベース**: Prisma, SQLite
-- **認証**: JWT
+- **データベース**: Supabase PostgreSQL
+- **認証**: Supabase Auth
 - **為替レート**: ExchangeRate-API.com
 
 ## セットアップ
@@ -34,31 +35,28 @@ cd subsc-manager
 npm install
 ```
 
-### 3. 環境変数の設定
+### 3. Supabaseプロジェクトの設定
+
+1. [Supabase](https://supabase.com)でアカウントを作成
+2. 新しいプロジェクトを作成
+3. プロジェクトURLとAPIキーを取得
+
+### 4. 環境変数の設定
 
 プロジェクトのルートに`.env`ファイルを作成し、以下の内容を設定してください：
 
 ```env
+# Supabase設定
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# データベース接続（Supabase PostgreSQL）
+DATABASE_URL=your_supabase_database_url
+
 # ExchangeRate-API.com のAPIキー
 # https://www.exchangerate-api.com/ でサインアップしてAPIキーを取得してください
 EXCHANGE_RATE_API_KEY=your_api_key_here
-
-# データベース接続情報
-DATABASE_URL="file:./dev.db"
-
-# JWT シークレット
-JWT_SECRET=your_jwt_secret_here
-
-# パスワードリセットトークンのシークレット
-PASSWORD_RESET_SECRET=your_password_reset_secret_here
 ```
-
-### 4. ExchangeRate-API.comのAPIキー取得
-
-1. [ExchangeRate-API.com](https://www.exchangerate-api.com/)にアクセス
-2. アカウントを作成
-3. 無料プランでAPIキーを取得
-4. `.env`ファイルの`EXCHANGE_RATE_API_KEY`に設定
 
 ### 5. データベースのセットアップ
 
@@ -74,6 +72,25 @@ npm run dev
 ```
 
 アプリケーションは http://localhost:3000 で起動します。
+
+## Supabase認証への移行
+
+### 移行手順
+
+1. **Supabaseプロジェクトの作成**
+   - Supabaseダッシュボードでプロジェクトを作成
+   - Authentication > SettingsでEmail認証を有効化
+
+2. **環境変数の設定**
+   - `.env`ファイルにSupabase設定を追加
+
+3. **データベースの移行**
+   - 既存のSQLiteデータをSupabase PostgreSQLに移行
+
+4. **認証システムの切り替え**
+   - 既存のJWT認証からSupabase認証に切り替え
+
+詳細な移行手順は[移行ガイド](./MIGRATION_GUIDE.md)を参照してください。
 
 ## 使用方法
 

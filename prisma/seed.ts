@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { PasswordHasher } from '../src/infrastructure/utils/PasswordHasher';
 
 const prisma = new PrismaClient();
 
@@ -16,15 +15,14 @@ async function main() {
     console.log('既存のユーザーが見つかりました:', existingUser.email);
     sampleUser = existingUser;
   } else {
-    // 新しいユーザーを作成
-    const passwordHash = await PasswordHasher.hash('510Daiki');
-    sampleUser = await prisma.user.create({
-      data: {
-        email: 'gotodaiki1110@icloud.com',
-        password_hash: passwordHash,
-      },
-    });
-    console.log('新しいユーザーが作成されました:', sampleUser.email);
+    // 新しいユーザーを作成（Supabase認証では手動でユーザーを作成する必要があります）
+    console.log(
+      'Supabase認証を使用しているため、ユーザーは手動で作成してください'
+    );
+    console.log(
+      'Supabaseダッシュボードでユーザーを作成するか、アプリケーションで登録してください'
+    );
+    return;
   }
 
   console.log('サンプルユーザーが作成されました:', sampleUser);

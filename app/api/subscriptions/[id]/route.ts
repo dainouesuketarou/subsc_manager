@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { JwtTokenManager } from '../../../../src/infrastructure/utils/JwtTokenManager';
-import { PrismaUserRepository } from '../../../../src/infrastructure/PrismaUserRepository';
+import { SupabaseAuthMiddleware } from '../../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
 import { PrismaSubscriptionRepository } from '../../../../src/infrastructure/PrismaSubscriptionRepository';
 import { DeleteSubscriptionUseCase } from '../../../../src/application/usecase/DeleteSubscriptionUseCase';
 import { UpdateSubscriptionUseCase } from '../../../../src/application/usecase/UpdateSubscriptionUseCase';
 
 const prisma = new PrismaClient();
-const userRepository = new PrismaUserRepository(prisma);
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
 
 interface AuthenticatedRequest extends NextRequest {
@@ -20,34 +18,7 @@ interface AuthenticatedRequest extends NextRequest {
 async function authenticate(
   request: NextRequest
 ): Promise<AuthenticatedRequest | NextResponse> {
-  try {
-    const authHeader = request.headers.get('authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization header is required' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = JwtTokenManager.verifyToken(token);
-    const user = await userRepository.findById(payload.userId);
-
-    const authenticatedRequest = request as AuthenticatedRequest;
-    authenticatedRequest.user = {
-      id: user.toDTO().id,
-      email: user.toDTO().email.value,
-    };
-
-    return authenticatedRequest;
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return NextResponse.json(
-      { error: 'Invalid or expired token' },
-      { status: 401 }
-    );
-  }
+  return SupabaseAuthMiddleware.authenticate(request);
 }
 
 export async function DELETE(

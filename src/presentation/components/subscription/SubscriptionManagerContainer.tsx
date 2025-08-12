@@ -9,7 +9,7 @@ import { EmptyState } from './EmptyState';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { Modal } from '../common/Modal';
-import { AuthModal } from '../auth/AuthModal';
+import { SupabaseAuthModal } from '../auth/SupabaseAuthModal';
 import { AddSubscriptionForm } from './AddSubscriptionForm';
 import { EditSubscriptionForm } from './EditSubscriptionForm';
 import { SubscriptionData } from '../../types/subscription';
@@ -17,7 +17,6 @@ import { SubscriptionData } from '../../types/subscription';
 export const SubscriptionManagerContainer: React.FC = () => {
   const {
     user,
-    token,
     logout,
     currentSubscriptions,
     isLoading,
@@ -41,10 +40,10 @@ export const SubscriptionManagerContainer: React.FC = () => {
 
   // ログイン済みユーザーが認証ページにアクセスした場合のリダイレクト
   useEffect(() => {
-    if (user && token && window.location.pathname === '/auth') {
+    if (user && window.location.pathname === '/auth') {
       window.location.href = '/';
     }
-  }, [user, token]);
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -151,7 +150,7 @@ export const SubscriptionManagerContainer: React.FC = () => {
       </main>
 
       {/* モーダル */}
-      <AuthModal
+      <SupabaseAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />

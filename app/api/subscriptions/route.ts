@@ -4,9 +4,9 @@ import { PrismaSubscriptionRepository } from '../../../src/infrastructure/Prisma
 import { RegisterSubscriptionUseCase } from '../../../src/application/usecase/RegisterSubscriptionUseCase';
 import { GetSubscriptionsUseCase } from '../../../src/application/usecase/GetSubscriptionsUseCase';
 import {
-  AuthMiddleware,
+  SupabaseAuthMiddleware,
   AuthenticatedRequest,
-} from '../../../src/infrastructure/middleware/AuthMiddleware';
+} from '../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
 
 const prisma = new PrismaClient();
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
@@ -31,7 +31,7 @@ async function handleGet(request: AuthenticatedRequest) {
   }
 }
 
-export const GET = AuthMiddleware.withAuth(handleGet);
+export const GET = SupabaseAuthMiddleware.withAuth(handleGet);
 
 async function handlePost(request: AuthenticatedRequest) {
   try {
@@ -84,4 +84,4 @@ async function handlePost(request: AuthenticatedRequest) {
   }
 }
 
-export const POST = AuthMiddleware.withAuth(handlePost);
+export const POST = SupabaseAuthMiddleware.withAuth(handlePost);

@@ -9,6 +9,7 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@app/(.*)$': '<rootDir>/app/$1',
+    '^@tests/(.*)$': '<rootDir>/__tests__/$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',

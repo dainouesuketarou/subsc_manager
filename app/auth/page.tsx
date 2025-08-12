@@ -1,12 +1,21 @@
 'use client';
 
-import { AuthProvider } from '../../src/presentation/contexts/AuthContext';
-import { AuthContainer } from '../../src/presentation/components/auth/AuthContainer';
+import { UnifiedAuthProvider } from '../../src/presentation/contexts/UnifiedAuthContext';
+import { SupabaseAuthModal } from '../../src/presentation/components/auth/SupabaseAuthModal';
+import { useState } from 'react';
 
 export default function AuthPage() {
+  const [isModalOpen, setIsModalOpen] = useState(true);
+
   return (
-    <AuthProvider>
-      <AuthContainer />
-    </AuthProvider>
+    <UnifiedAuthProvider>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <SupabaseAuthModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initialMode="login"
+        />
+      </div>
+    </UnifiedAuthProvider>
   );
 }

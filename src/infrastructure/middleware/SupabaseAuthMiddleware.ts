@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { JwtTokenManager } from '../utils/JwtTokenManager';
-import { PrismaClient } from '@prisma/client';
-import { PrismaUserRepository } from '../PrismaUserRepository';
+import { supabase } from '../supabase/client';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -10,18 +8,15 @@ export interface AuthenticatedRequest extends NextRequest {
   };
 }
 
-export class AuthMiddleware {
-  private static prisma = new PrismaClient();
-  private static userRepository = new PrismaUserRepository(this.prisma);
-
+export class SupabaseAuthMiddleware {
   /**
-   * 認証ミドルウェア
-   * AuthorizationヘッダーからJWTトークンを取得し、ユーザー情報を検証する
+   * Supabaseセッションを使用した認証
    */
   static async authenticate(
     request: NextRequest
   ): Promise<AuthenticatedRequest | NextResponse> {
     try {
+      // Authorizationヘッダーからトークンを取得
       const authHeader = request.headers.get('authorization');
 
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -33,24 +28,28 @@ export class AuthMiddleware {
 
       const token = authHeader.substring(7); // "Bearer "を除去
 
-      // JWTトークンの検証
-      const payload = JwtTokenManager.verifyToken(token);
+      // Supabaseセッションを検証
+      const { data, error } = await supabase.auth.getUser(token);
 
-      // ユーザーの存在確認
-      const user = await this.userRepository.findById(payload.userId);
+      if (error || !data.user) {
+        return NextResponse.json(
+          { error: 'Invalid or expired token' },
+          { status: 401 }
+        );
+      }
 
       // 認証済みリクエストを作成
       const authenticatedRequest = request as AuthenticatedRequest;
       authenticatedRequest.user = {
-        id: user.toDTO().id,
-        email: user.toDTO().email.value,
+        id: data.user.id,
+        email: data.user.email!,
       };
 
       return authenticatedRequest;
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error('Supabase authentication error:', error);
       return NextResponse.json(
-        { error: 'Invalid or expired token' },
+        { error: 'Authentication failed' },
         { status: 401 }
       );
     }
@@ -71,5 +70,29 @@ export class AuthMiddleware {
 
       return handler(authenticatedRequest);
     };
+  }
+
+  /**
+   * セッションからユーザー情報を取得（クライアントサイド用）
+   */
+  static async getCurrentUser() {
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return null;
+      }
+
+      return {
+        id: user.id,
+        email: user.email!,
+      };
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
   }
 }

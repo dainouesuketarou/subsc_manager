@@ -16,16 +16,14 @@
     "db:seed": "npx prisma db seed",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
-    "db:migrate": "npx prisma migrate deploy"
+    "db:migrate": "npx prisma migrate deploy",
+    "migrate:to-supabase": "tsx scripts/migrate-to-supabase.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
     "@prisma/extension-accelerate": "^2.0.2",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "bcryptjs": "^3.0.2",
+    "@supabase/supabase-js": "^2.54.0",
     "dotenv": "^17.2.1",
-    "jsonwebtoken": "^9.0.2",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0"

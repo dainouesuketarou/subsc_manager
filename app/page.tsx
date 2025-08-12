@@ -1,15 +1,15 @@
 'use client';
 
-import { AuthProvider } from '../src/presentation/contexts/AuthContext';
+import { UnifiedAuthProvider } from '../src/presentation/contexts/UnifiedAuthContext';
 import { GuestSubscriptionProvider } from '../src/presentation/contexts/GuestSubscriptionContext';
 import { SubscriptionManager } from '../src/presentation/components/subscription/SubscriptionManager';
 
 export default function Home() {
   return (
-    <AuthProvider>
+    <UnifiedAuthProvider>
       <GuestSubscriptionProvider>
         <SubscriptionManager />
       </GuestSubscriptionProvider>
-    </AuthProvider>
+    </UnifiedAuthProvider>
   );
 }

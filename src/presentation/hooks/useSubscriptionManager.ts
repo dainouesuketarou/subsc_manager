@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 import { useGuestSubscriptions } from '../contexts/GuestSubscriptionContext';
 import { SubscriptionData } from '../types/subscription';
 import { ExchangeRateService } from '../../infrastructure/services/ExchangeRateService';
 
 export const useSubscriptionManager = () => {
-  const { user, token, logout } = useAuth();
+  const { user, signOut } = useUnifiedAuth();
   const {
     subscriptions: guestSubscriptions,
     addSubscription,
@@ -39,17 +39,13 @@ export const useSubscriptionManager = () => {
 
   // サブスクリプションを取得
   const fetchSubscriptions = useCallback(async () => {
-    if (!user || !token) return;
+    if (!user) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/subscriptions', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch('/api/subscriptions');
 
       if (!response.ok) {
         throw new Error('Failed to fetch subscriptions');
@@ -66,12 +62,12 @@ export const useSubscriptionManager = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, token]);
+  }, [user]);
 
   // サブスクリプションを削除
   const deleteSubscriptionHandler = useCallback(
     async (subscription: SubscriptionData) => {
-      if (!user || !token) {
+      if (!user) {
         // ゲストユーザーの場合
         deleteSubscription(subscription.id);
         return;
@@ -80,9 +76,6 @@ export const useSubscriptionManager = () => {
       try {
         const response = await fetch(`/api/subscriptions/${subscription.id}`, {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         });
 
         if (!response.ok) {
@@ -94,7 +87,7 @@ export const useSubscriptionManager = () => {
         setError(err instanceof Error ? err.message : 'An error occurred');
       }
     },
-    [user, token, fetchSubscriptions, deleteSubscription]
+    [user, fetchSubscriptions, deleteSubscription]
   );
 
   // 現在のサブスクリプションを更新
@@ -210,8 +203,7 @@ export const useSubscriptionManager = () => {
 
   return {
     user,
-    token,
-    logout,
+    logout: signOut,
     currentSubscriptions,
     isLoading,
     error,
