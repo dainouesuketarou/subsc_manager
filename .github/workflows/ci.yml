@@ -22,6 +22,7 @@ on:
 env:
   NODE_VERSION: '18' # Node.jsのバージョン
   DATABASE_URL: ${{ secrets.DATABASE_URL }} # データベース接続URL（シークレット）
+  DIRECT_URL: ${{ secrets.DIRECT_URL }} # マイグレーション用直接接続URL（シークレット）
 
 jobs:
   # =============================================================================
@@ -149,6 +150,7 @@ jobs:
           npx prisma db push --schema=./prisma/schema.prisma
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
       # テストの実行
@@ -156,6 +158,7 @@ jobs:
         run: npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
       # テストカバレッジの生成
@@ -163,6 +166,7 @@ jobs:
         run: npm run test:coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
   # =============================================================================
@@ -193,6 +197,7 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
       # ビルド成果物のアップロード（デプロイ用）
       - name: Upload build artifacts
@@ -263,6 +268,7 @@ jobs:
       #   run: npx prisma migrate deploy
       #   env:
       #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #     DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
       # # Vercelへのデプロイ
       # - name: Deploy to Vercel
