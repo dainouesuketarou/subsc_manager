@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 import { PrismaSubscriptionRepository } from '../../../src/infrastructure/PrismaSubscriptionRepository';
 import { PrismaUserRepository } from '../../../src/infrastructure/PrismaUserRepository';
 import { RegisterSubscriptionUseCase } from '../../../src/application/usecase/RegisterSubscriptionUseCase';
@@ -7,9 +8,8 @@ import {
   SupabaseAuthMiddleware,
   AuthenticatedRequest,
 } from '../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
-import { DatabaseErrorMiddleware } from '../../../src/infrastructure/middleware/DatabaseErrorMiddleware';
-import { prisma } from '../../../src/infrastructure/supabase/client';
 
+const prisma = new PrismaClient();
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
 const userRepository = new PrismaUserRepository(prisma);
 const registerUseCase = new RegisterSubscriptionUseCase(
@@ -29,9 +29,15 @@ async function handleGet(request: AuthenticatedRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    return DatabaseErrorMiddleware.handleError(error);
+    console.error('Error fetching subscriptions:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
+
+export const GET = SupabaseAuthMiddleware.withAuth(handleGet);
 
 async function handlePost(request: AuthenticatedRequest) {
   try {
@@ -67,6 +73,8 @@ async function handlePost(request: AuthenticatedRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
+    console.error('Error registering subscription:', error);
+
     if (error instanceof Error) {
       if (
         error.message.includes('Invalid payment cycle') ||
@@ -76,9 +84,11 @@ async function handlePost(request: AuthenticatedRequest) {
       }
     }
 
-    return DatabaseErrorMiddleware.handleError(error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
-export const GET = SupabaseAuthMiddleware.withAuth(handleGet);
 export const POST = SupabaseAuthMiddleware.withAuth(handlePost);

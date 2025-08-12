@@ -37,8 +37,15 @@ export const useSubscriptionManager = () => {
 
   // サブスクリプションを取得
   const fetchSubscriptions = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useSubscriptionManager: No user, skipping fetch');
+      return;
+    }
 
+    console.log(
+      'useSubscriptionManager: Starting to fetch subscriptions for user:',
+      user.id
+    );
     setIsLoading(true);
     setError(null);
 
@@ -50,9 +57,20 @@ export const useSubscriptionManager = () => {
         data: { session },
       } = await supabase.auth.getSession();
 
+      console.log('useSubscriptionManager: Session exists:', !!session);
+      console.log(
+        'useSubscriptionManager: Access token exists:',
+        !!session?.access_token
+      );
+
       if (!session?.access_token) {
         throw new Error('No valid session found');
       }
+
+      console.log(
+        'useSubscriptionManager: Making API request with token length:',
+        session.access_token.length
+      );
 
       const response = await fetch('/api/subscriptions', {
         headers: {
@@ -61,15 +79,30 @@ export const useSubscriptionManager = () => {
         },
       });
 
+      console.log(
+        'useSubscriptionManager: API response status:',
+        response.status
+      );
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('useSubscriptionManager: API error response:', errorText);
         throw new Error('Failed to fetch subscriptions');
       }
 
       const data = await response.json();
       // APIレスポンスは { subscriptions: [...] } の形式で返される
       const subscriptions = data.subscriptions || [];
+      console.log(
+        'useSubscriptionManager: Received subscriptions count:',
+        subscriptions.length
+      );
       setCurrentSubscriptions(subscriptions);
     } catch (err) {
+      console.error(
+        'useSubscriptionManager: Error in fetchSubscriptions:',
+        err
+      );
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
