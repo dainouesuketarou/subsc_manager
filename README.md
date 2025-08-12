@@ -71,7 +71,7 @@ npx prisma db push
 npm run dev
 ```
 
-アプリケーションは http://localhost:3000 で起動します。
+アプリケーションは <http://localhost:3000> で起動します。
 
 ## Supabase認証への移行
 
