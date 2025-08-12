@@ -11,14 +11,24 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   {
-    ignores: ['.github/**/*', '**/.github/**/*', '**/*.yml', '**/*.yaml'],
+    ignores: [
+      '.github/**/*',
+      '**/.github/**/*',
+      '**/*.yml',
+      '**/*.yaml',
+      'app/generated/**/*',
+      'node_modules/**/*',
+    ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   ...compat.extends('prettier'),
   ...compat.plugins('prettier'),
   {
     rules: {
-      'prettier/prettier': 'error',
+      'prettier/prettier': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-expressions': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 ];

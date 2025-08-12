@@ -56,15 +56,8 @@ export class ExchangeRateService {
    */
   private static async fetchLatestRates(): Promise<Record<string, number>> {
     const apiKey = process.env.EXCHANGE_RATE_API_KEY;
-    console.log('Environment variables check:');
-    console.log('- EXCHANGE_RATE_API_KEY:', apiKey ? '設定済み' : '未設定');
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('databaseUrl', process.env.DATABASE_URL);
 
     if (!apiKey || apiKey === 'your_api_key_here') {
-      console.warn(
-        'APIキーが設定されていません。フォールバックレートを使用します。'
-      );
       return this.getFallbackRates();
     }
 

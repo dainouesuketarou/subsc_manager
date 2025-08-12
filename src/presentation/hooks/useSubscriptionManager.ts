@@ -56,12 +56,10 @@ export const useSubscriptionManager = () => {
       }
 
       const data = await response.json();
-      console.log('API response data:', data);
       // APIレスポンスが { subscriptions: [...] } の形式の場合、subscriptionsプロパティを取得
       const subscriptions = Array.isArray(data)
         ? data
         : data.subscriptions || [];
-      console.log('Processed subscriptions:', subscriptions);
       setCurrentSubscriptions(subscriptions);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

@@ -39,9 +39,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    // 本番環境では詳細なエラー情報を隠す
+    const isProduction = process.env.NODE_ENV === 'production';
+    const errorMessage = isProduction
+      ? 'Internal server error'
+      : error instanceof Error
+        ? error.message
+        : 'Unknown error';
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

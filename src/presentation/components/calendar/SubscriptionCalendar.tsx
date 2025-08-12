@@ -74,15 +74,6 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
     : (subscriptions as { subscriptions?: SubscriptionData[] })
         ?.subscriptions || [];
 
-  // デバッグ用：subscriptionsの型と内容を確認
-  console.log('SubscriptionCalendar - subscriptions:', {
-    type: typeof subscriptions,
-    isArray: Array.isArray(subscriptions),
-    length: Array.isArray(subscriptions) ? subscriptions.length : 'N/A',
-    value: subscriptions,
-    actualSubscriptions,
-  });
-
   const [currentDate, setCurrentDate] = useState(new Date());
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(
     {}
