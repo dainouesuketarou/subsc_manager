@@ -10,7 +10,7 @@ env:
 jobs:
   # コードレビュー用のチェック
   code-review:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
 
   # テスト実行
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     services:
       postgres:
         image: postgres:15
@@ -113,7 +113,7 @@ jobs:
 
   # ビルドテスト
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -136,7 +136,7 @@ jobs:
 
   # セキュリティチェック
   security:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -164,7 +164,7 @@ jobs:
 
   # パフォーマンスチェック
   performance:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -190,7 +190,7 @@ jobs:
 
   # PR ラベルチェック
   pr-labels:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check PR labels
         run: |
