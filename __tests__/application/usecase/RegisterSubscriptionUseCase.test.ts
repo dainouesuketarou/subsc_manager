@@ -1,15 +1,26 @@
 import { RegisterSubscriptionUseCase } from '../../../src/application/usecase/RegisterSubscriptionUseCase';
 import { ISubscriptionRepository } from '../../../src/domain/repositories/ISubscriptionRepository';
+import { IUserRepository } from '../../../src/domain/repositories/IUserRepository';
 import { Subscription } from '../../../src/domain/entities/Subscription';
 import { Money } from '../../../src/domain/value-objects/Money';
 import { PaymentCycleValue } from '../../../src/domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../../../src/domain/value-objects/SubscriptionCategory';
 
 // モックリポジトリ
-const mockRepository: jest.Mocked<ISubscriptionRepository> = {
+const mockSubscriptionRepository: jest.Mocked<ISubscriptionRepository> = {
   create: jest.fn(),
   findById: jest.fn(),
   findByUserId: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
+
+const mockUserRepository: jest.Mocked<IUserRepository> = {
+  create: jest.fn(),
+  createWithSupabaseUser: jest.fn(),
+  findById: jest.fn(),
+  findByEmail: jest.fn(),
+  findBySupabaseUserId: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
 };
@@ -18,7 +29,10 @@ describe('RegisterSubscriptionUseCase', () => {
   let useCase: RegisterSubscriptionUseCase;
 
   beforeEach(() => {
-    useCase = new RegisterSubscriptionUseCase(mockRepository);
+    useCase = new RegisterSubscriptionUseCase(
+      mockSubscriptionRepository,
+      mockUserRepository
+    );
     jest.clearAllMocks();
   });
 
@@ -26,6 +40,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('有効なリクエストでサブスクリプションを登録できる', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -33,11 +48,19 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockSubscriptionRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           toDTO: expect.any(Function),
         })
@@ -48,6 +71,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('異なるカテゴリーでサブスクリプションを登録できる', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Spotify',
         price: 500,
         currency: 'JPY',
@@ -55,17 +79,26 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'MUSIC_STREAMING',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.create).toHaveBeenCalled();
       expect(result.subscriptionId).toBeDefined();
     });
 
     it('異なる通貨でサブスクリプションを登録できる', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix US',
         price: 15,
         currency: 'USD',
@@ -73,17 +106,26 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.create).toHaveBeenCalled();
       expect(result.subscriptionId).toBeDefined();
     });
 
     it('異なる支払いサイクルでサブスクリプションを登録できる', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Annual Plan',
         price: 10000,
         currency: 'JPY',
@@ -91,17 +133,26 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'EDUCATION',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.create).toHaveBeenCalled();
       expect(result.subscriptionId).toBeDefined();
     });
 
     it('userIdが空の場合にエラーをスローする', async () => {
       const request = {
         userId: '',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -117,6 +168,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('nameが空の場合にエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: '',
         price: 1000,
         currency: 'JPY',
@@ -132,6 +184,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('priceが0以下の場合にエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 0,
         currency: 'JPY',
@@ -147,6 +200,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('無効な通貨でエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'INVALID',
@@ -160,6 +214,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('無効な支払いサイクルでエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -173,6 +228,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('無効なカテゴリーでエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -186,6 +242,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('支払い開始日を指定してサブスクリプションを登録できる', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -194,11 +251,19 @@ describe('RegisterSubscriptionUseCase', () => {
         paymentStartDate: '2024-08-03',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockSubscriptionRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           toDTO: expect.any(Function),
         })
@@ -209,6 +274,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('支払い開始日を指定しない場合、現在の日付が設定される', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -216,11 +282,19 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.create = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.create = jest
+        .fn()
+        .mockResolvedValue(undefined);
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockSubscriptionRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           toDTO: expect.any(Function),
         })
@@ -231,6 +305,7 @@ describe('RegisterSubscriptionUseCase', () => {
     it('リポジトリでエラーが発生した場合にエラーをスローする', async () => {
       const request = {
         userId: 'user-123',
+        userEmail: 'test@example.com',
         name: 'Netflix',
         price: 1000,
         currency: 'JPY',
@@ -238,9 +313,15 @@ describe('RegisterSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.create = jest
+      mockSubscriptionRepository.create = jest
         .fn()
         .mockRejectedValue(new Error('Database error'));
+      mockUserRepository.findById = jest
+        .fn()
+        .mockRejectedValue(new Error('User not found'));
+      mockUserRepository.createWithSupabaseUser = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       await expect(useCase.execute(request)).rejects.toThrow('Database error');
     });

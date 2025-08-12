@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { PrismaSubscriptionRepository } from '../../../src/infrastructure/PrismaSubscriptionRepository';
+import { PrismaUserRepository } from '../../../src/infrastructure/PrismaUserRepository';
 import { RegisterSubscriptionUseCase } from '../../../src/application/usecase/RegisterSubscriptionUseCase';
 import { GetSubscriptionsUseCase } from '../../../src/application/usecase/GetSubscriptionsUseCase';
 import {
@@ -10,9 +11,14 @@ import {
 
 const prisma = new PrismaClient();
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
-const registerUseCase = new RegisterSubscriptionUseCase(subscriptionRepository);
+const userRepository = new PrismaUserRepository(prisma);
+const registerUseCase = new RegisterSubscriptionUseCase(
+  subscriptionRepository,
+  userRepository
+);
 const getSubscriptionsUseCase = new GetSubscriptionsUseCase(
-  subscriptionRepository
+  subscriptionRepository,
+  userRepository
 );
 
 async function handleGet(request: AuthenticatedRequest) {
@@ -56,6 +62,7 @@ async function handlePost(request: AuthenticatedRequest) {
 
     const result = await registerUseCase.execute({
       userId: request.user!.id,
+      userEmail: request.user!.email,
       name,
       price,
       currency,

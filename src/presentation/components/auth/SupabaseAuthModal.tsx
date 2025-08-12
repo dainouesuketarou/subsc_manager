@@ -4,11 +4,12 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { SupabaseLoginForm } from './SupabaseLoginForm';
 import { SupabaseRegisterForm } from './SupabaseRegisterForm';
+import { PasswordResetForm } from './PasswordResetForm';
 
 interface SupabaseAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'login' | 'register';
+  initialMode?: 'login' | 'register' | 'reset';
 }
 
 export const SupabaseAuthModal: React.FC<SupabaseAuthModalProps> = ({
@@ -16,31 +17,46 @@ export const SupabaseAuthModal: React.FC<SupabaseAuthModalProps> = ({
   onClose,
   initialMode = 'login',
 }) => {
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const [mode, setMode] = useState<'login' | 'register' | 'reset'>(initialMode);
 
   const handleSuccess = () => {
     onClose();
-    // ページをリロードして認証状態を更新
-    window.location.reload();
+    // ページリロードを削除して、コンテキストの更新に依存
   };
 
   const switchToLogin = () => setMode('login');
   const switchToRegister = () => setMode('register');
+  const switchToReset = () => setMode('reset');
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'login':
+        return 'ログイン';
+      case 'register':
+        return 'アカウント作成';
+      case 'reset':
+        return 'パスワードリセット';
+      default:
+        return 'ログイン';
+    }
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={mode === 'login' ? 'ログイン' : 'アカウント作成'}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={getTitle()}>
       <div className="w-full">
         {mode === 'login' ? (
           <SupabaseLoginForm
             onSuccess={handleSuccess}
             onSwitchToRegister={switchToRegister}
+            onSwitchToReset={switchToReset}
+          />
+        ) : mode === 'register' ? (
+          <SupabaseRegisterForm
+            onSuccess={handleSuccess}
+            onSwitchToLogin={switchToLogin}
           />
         ) : (
-          <SupabaseRegisterForm
+          <PasswordResetForm
             onSuccess={handleSuccess}
             onSwitchToLogin={switchToLogin}
           />

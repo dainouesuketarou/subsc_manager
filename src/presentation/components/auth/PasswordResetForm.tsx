@@ -1,51 +1,62 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
+import { SupabaseAuthService } from '../../../infrastructure/services/SupabaseAuthService';
 
-interface SupabaseLoginFormProps {
+interface PasswordResetFormProps {
   onSuccess?: () => void;
-  onSwitchToRegister?: () => void;
-  onSwitchToReset?: () => void;
+  onSwitchToLogin?: () => void;
 }
 
-export const SupabaseLoginForm: React.FC<SupabaseLoginFormProps> = ({
+export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
   onSuccess,
-  onSwitchToRegister,
-  onSwitchToReset,
+  onSwitchToLogin,
 }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const { signIn } = useUnifiedAuth();
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
+      setSuccessMessage('');
+
+      if (!email) {
+        setError('メールアドレスを入力してください');
+        return;
+      }
+
       setIsLoading(true);
 
       try {
-        const result = await signIn(email, password);
+        const result = await SupabaseAuthService.resetPassword(email);
 
         if (result.error) {
           setError(result.error);
-          setIsLoading(false);
         } else {
-          // ログイン成功時は即座にonSuccessを呼び出す
-          onSuccess?.();
+          setSuccessMessage(
+            'パスワードリセットメールを送信しました。メールボックスを確認してください。'
+          );
+          // フォームをリセット
+          setEmail('');
+          // 5秒後に成功メッセージを消す
+          setTimeout(() => {
+            setSuccessMessage('');
+            onSuccess?.();
+          }, 5000);
         }
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('Password reset error:', error);
         setError(
-          'ログインに失敗しました。しばらく時間をおいて再度お試しください。'
+          'パスワードリセットに失敗しました。しばらく時間をおいて再度お試しください。'
         );
+      } finally {
         setIsLoading(false);
       }
     },
-    [email, password, signIn, onSuccess]
+    [email, onSuccess]
   );
 
   const handleEmailChange = useCallback(
@@ -56,19 +67,15 @@ export const SupabaseLoginForm: React.FC<SupabaseLoginFormProps> = ({
     []
   );
 
-  const handlePasswordChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPassword(e.target.value);
-      setError(''); // エラーをクリア
-    },
-    []
-  );
-
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">ログイン</h2>
-        <p className="text-gray-600">アカウントにログインしてください</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          パスワードリセット
+        </h2>
+        <p className="text-gray-600">
+          登録済みのメールアドレスを入力してください
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -92,45 +99,20 @@ export const SupabaseLoginForm: React.FC<SupabaseLoginFormProps> = ({
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-semibold text-gray-700 mb-2 flex items-center"
-          >
-            <span className="emoji-icon">🔒</span>
-            パスワード
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              value={password}
-              onChange={handlePasswordChange}
-              required
-              disabled={isLoading}
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-black font-medium hover-lift disabled:opacity-50"
-              placeholder="パスワードを入力"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              disabled={isLoading}
-            >
-              {showPassword ? (
-                <span className="emoji-icon text-lg">🙈</span>
-              ) : (
-                <span className="emoji-icon text-lg">👁️</span>
-              )}
-            </button>
-          </div>
-        </div>
-
         {error && (
           <div className="rounded-lg bg-red-50 border border-red-200 p-4 wiggle">
             <div className="text-sm text-red-700 font-medium flex items-center">
               <span className="emoji-icon">⚠️</span>
               {error}
+            </div>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+            <div className="text-sm text-green-700 font-medium flex items-center">
+              <span className="emoji-icon">✅</span>
+              {successMessage}
             </div>
           </div>
         )}
@@ -163,40 +145,26 @@ export const SupabaseLoginForm: React.FC<SupabaseLoginFormProps> = ({
                 ></path>
               </svg>
               <span className="emoji-icon">⏳</span>
-              ログイン中...
+              送信中...
             </div>
           ) : (
             <>
-              <span className="emoji-icon">🔑</span>
-              ログイン
+              <span className="emoji-icon">📧</span>
+              リセットメールを送信
             </>
           )}
         </button>
 
-        {onSwitchToRegister && (
+        {onSwitchToLogin && (
           <div className="text-center pt-4">
             <button
               type="button"
-              onClick={onSwitchToRegister}
+              onClick={onSwitchToLogin}
               disabled={isLoading}
               className="text-purple-600 hover:text-purple-500 text-sm font-medium transition-colors duration-200 disabled:opacity-50"
             >
-              <span className="emoji-icon">✨</span>
-              アカウントをお持ちでない方はこちら
-            </button>
-          </div>
-        )}
-
-        {onSwitchToReset && (
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              onClick={onSwitchToReset}
-              disabled={isLoading}
-              className="text-gray-600 hover:text-gray-500 text-sm font-medium transition-colors duration-200 disabled:opacity-50"
-            >
-              <span className="emoji-icon">🔑</span>
-              パスワードを忘れた方はこちら
+              <span className="emoji-icon">🔙</span>
+              ログインに戻る
             </button>
           </div>
         )}

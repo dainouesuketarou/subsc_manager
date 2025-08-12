@@ -66,14 +66,21 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
       );
 
       if (error) {
+        console.error('Sign in error:', error);
         return { error };
       }
 
-      setUser(authUser);
-      return {};
+      if (authUser) {
+        setUser(authUser);
+        return {};
+      } else {
+        return { error: 'ログインに失敗しました' };
+      }
     } catch (error) {
+      console.error('Sign in exception:', error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error:
+          'ログインに失敗しました。しばらく時間をおいて再度お試しください。',
       };
     }
   };
@@ -86,14 +93,23 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
       );
 
       if (error) {
+        console.error('Sign up error:', error);
         return { error };
       }
 
+      // メール確認が必要な場合（userがnullでerrorがundefined）
+      if (!authUser) {
+        return {}; // 成功（メール確認が必要）
+      }
+
+      // 即座にログインされる場合
       setUser(authUser);
       return {};
     } catch (error) {
+      console.error('Sign up exception:', error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error:
+          'アカウント作成に失敗しました。しばらく時間をおいて再度お試しください。',
       };
     }
   };

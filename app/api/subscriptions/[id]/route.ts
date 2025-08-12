@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { SupabaseAuthMiddleware } from '../../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
 import { PrismaSubscriptionRepository } from '../../../../src/infrastructure/PrismaSubscriptionRepository';
+import { PrismaUserRepository } from '../../../../src/infrastructure/PrismaUserRepository';
 import { DeleteSubscriptionUseCase } from '../../../../src/application/usecase/DeleteSubscriptionUseCase';
 import { UpdateSubscriptionUseCase } from '../../../../src/application/usecase/UpdateSubscriptionUseCase';
 
 const prisma = new PrismaClient();
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
+const userRepository = new PrismaUserRepository(prisma);
 
 interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -37,7 +39,8 @@ export async function DELETE(
     const userId = authenticatedRequest.user!.id;
 
     const deleteSubscriptionUseCase = new DeleteSubscriptionUseCase(
-      subscriptionRepository
+      subscriptionRepository,
+      userRepository
     );
 
     await deleteSubscriptionUseCase.execute({
@@ -87,7 +90,8 @@ export async function PUT(
     }
 
     const updateSubscriptionUseCase = new UpdateSubscriptionUseCase(
-      subscriptionRepository
+      subscriptionRepository,
+      userRepository
     );
 
     const result = await updateSubscriptionUseCase.execute({

@@ -1,6 +1,30 @@
 {
   "name": "subsc-manager",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "サブスクリプション管理アプリ - Netflix、Spotify、Amazon Primeなど、すべてのサブスクリプションを一元管理",
+  "keywords": [
+    "サブスクリプション",
+    "管理",
+    "Netflix",
+    "Spotify",
+    "Amazon Prime",
+    "家計管理",
+    "支払い管理",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "Supabase"
+  ],
+  "author": "SubscManager Team",
+  "license": "MIT",
+  "homepage": "https://subsc-manager.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/subsc-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/subsc-manager/issues"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev",

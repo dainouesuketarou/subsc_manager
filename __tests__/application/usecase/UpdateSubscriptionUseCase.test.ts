@@ -1,15 +1,26 @@
 import { UpdateSubscriptionUseCase } from '../../../src/application/usecase/UpdateSubscriptionUseCase';
 import { ISubscriptionRepository } from '../../../src/domain/repositories/ISubscriptionRepository';
+import { IUserRepository } from '../../../src/domain/repositories/IUserRepository';
 import { Subscription } from '../../../src/domain/entities/Subscription';
 import { Money } from '../../../src/domain/value-objects/Money';
 import { PaymentCycleValue } from '../../../src/domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../../../src/domain/value-objects/SubscriptionCategory';
 
 // モックリポジトリ
-const mockRepository: jest.Mocked<ISubscriptionRepository> = {
+const mockSubscriptionRepository: jest.Mocked<ISubscriptionRepository> = {
   create: jest.fn(),
   findById: jest.fn(),
   findByUserId: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
+
+const mockUserRepository: jest.Mocked<IUserRepository> = {
+  create: jest.fn(),
+  createWithSupabaseUser: jest.fn(),
+  findById: jest.fn(),
+  findByEmail: jest.fn(),
+  findBySupabaseUserId: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
 };
@@ -19,7 +30,10 @@ describe('UpdateSubscriptionUseCase', () => {
   let mockSubscription: Subscription;
 
   beforeEach(() => {
-    useCase = new UpdateSubscriptionUseCase(mockRepository);
+    useCase = new UpdateSubscriptionUseCase(
+      mockSubscriptionRepository,
+      mockUserRepository
+    );
     jest.clearAllMocks();
 
     // モックサブスクリプションを作成
@@ -44,13 +58,19 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
-      mockRepository.update = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.update = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.findById).toHaveBeenCalledWith('sub-123');
-      expect(mockRepository.update).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.findById).toHaveBeenCalledWith(
+        'sub-123'
+      );
+      expect(mockSubscriptionRepository.update).toHaveBeenCalled();
       expect(result.success).toBe(true);
     });
 
@@ -65,12 +85,16 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'MUSIC_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
-      mockRepository.update = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.update = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.update).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.update).toHaveBeenCalled();
       expect(result.success).toBe(true);
     });
 
@@ -86,12 +110,16 @@ describe('UpdateSubscriptionUseCase', () => {
         paymentStartDate: '2024-01-15',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
-      mockRepository.update = jest.fn().mockResolvedValue(undefined);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.update = jest
+        .fn()
+        .mockResolvedValue(undefined);
 
       const result = await useCase.execute(request);
 
-      expect(mockRepository.update).toHaveBeenCalled();
+      expect(mockSubscriptionRepository.update).toHaveBeenCalled();
       expect(result.success).toBe(true);
     });
 
@@ -154,7 +182,7 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(null);
+      mockSubscriptionRepository.findById = jest.fn().mockResolvedValue(null);
 
       await expect(useCase.execute(request)).rejects.toThrow(
         'サブスクリプションが見つかりません'
@@ -172,7 +200,9 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
 
       await expect(useCase.execute(request)).rejects.toThrow(
         'このサブスクリプションを更新する権限がありません'
@@ -190,7 +220,9 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
 
       await expect(useCase.execute(request)).rejects.toThrow();
     });
@@ -206,7 +238,9 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
 
       await expect(useCase.execute(request)).rejects.toThrow();
     });
@@ -222,7 +256,9 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'INVALID_CATEGORY',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
 
       await expect(useCase.execute(request)).rejects.toThrow();
     });
@@ -238,8 +274,10 @@ describe('UpdateSubscriptionUseCase', () => {
         category: 'VIDEO_STREAMING',
       };
 
-      mockRepository.findById = jest.fn().mockResolvedValue(mockSubscription);
-      mockRepository.update = jest
+      mockSubscriptionRepository.findById = jest
+        .fn()
+        .mockResolvedValue(mockSubscription);
+      mockSubscriptionRepository.update = jest
         .fn()
         .mockRejectedValue(new Error('Database error'));
 

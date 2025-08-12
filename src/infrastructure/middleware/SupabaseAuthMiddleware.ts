@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {

@@ -18,7 +18,8 @@ datasource db {
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
-  password_hash String
+  password_hash String?
+  supabase_user_id String?     @unique
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
   subscriptions Subscription[]
@@ -66,6 +67,7 @@ enum Currency {
 
 enum PaymentCycle {
   DAILY // 毎日
+  WEEKLY // 毎週
   MONTHLY // 毎月
   SEMI_ANNUALLY // 毎半年
   ANNUALLY // 毎年

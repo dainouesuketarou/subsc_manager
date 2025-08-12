@@ -3,6 +3,10 @@ import { ExchangeRateService } from '../../../src/infrastructure/services/Exchan
 // fetchのモック
 global.fetch = jest.fn();
 
+// console.errorとconsole.warnをモック
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
 // 環境変数のモック
 const originalEnv = process.env;
 
@@ -12,11 +16,17 @@ describe('ExchangeRateService', () => {
     ExchangeRateService.clearCache();
     // 環境変数をリセット
     process.env = { ...originalEnv };
+    // console.errorとconsole.warnをモック
+    console.error = jest.fn();
+    console.warn = jest.fn();
   });
 
   afterEach(() => {
     // 環境変数を元に戻す
     process.env = originalEnv;
+    // console.errorとconsole.warnを元に戻す
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   describe('getExchangeRates', () => {

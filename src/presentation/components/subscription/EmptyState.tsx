@@ -14,10 +14,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <div className="text-6xl mb-4">
           <span className="emoji-icon">📱</span>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
           サブスクリプションがありません
         </h3>
-        <p className="text-gray-500 mb-6">
+        <p className="text-gray-500 dark:text-gray-400 mb-6">
           ゲストでもサブスクリプションを管理できます。ログインするとデータが永続化されます。
         </p>
 
@@ -29,7 +29,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <span className="emoji-icon">✨</span>
             サブスクリプションを追加
           </button>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             <span className="emoji-icon">💾</span>
             ゲストモードでは、データはブラウザに保存されます
           </p>

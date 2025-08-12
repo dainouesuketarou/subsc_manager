@@ -6,12 +6,11 @@ import { SubscriptionHeader } from './SubscriptionHeader';
 import { SubscriptionTable } from './SubscriptionTable';
 import { SubscriptionCalendar } from '../calendar/SubscriptionCalendar';
 import { EmptyState } from './EmptyState';
-import { LoadingSpinner } from '../common/LoadingSpinner';
-import { DeleteConfirmationModal } from './DeleteConfirmationModal';
-import { Modal } from '../common/Modal';
 import { SupabaseAuthModal } from '../auth/SupabaseAuthModal';
 import { AddSubscriptionForm } from './AddSubscriptionForm';
 import { EditSubscriptionForm } from './EditSubscriptionForm';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { Modal } from '../common/Modal';
 import { SubscriptionData } from '../../types/subscription';
 
 export const SubscriptionManagerContainer: React.FC = () => {
@@ -37,6 +36,7 @@ export const SubscriptionManagerContainer: React.FC = () => {
     useState<SubscriptionData | null>(null);
   const [deletingSubscription, setDeletingSubscription] =
     useState<SubscriptionData | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // ログイン済みユーザーが認証ページにアクセスした場合のリダイレクト
   useEffect(() => {
@@ -69,6 +69,7 @@ export const SubscriptionManagerContainer: React.FC = () => {
 
   const handleAddSuccess = () => {
     setIsAddModalOpen(false);
+    setSelectedDate(null);
     if (user) {
       fetchSubscriptions();
     }
@@ -84,24 +85,41 @@ export const SubscriptionManagerContainer: React.FC = () => {
     // ゲストユーザーの場合は、GuestSubscriptionContextが自動的に更新される
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddSubscriptionClick = () => {
+    setSelectedDate(null);
+    setIsAddModalOpen(true);
+  };
+
+  // 初期ローディング時のみLoadingSpinnerを表示
+  if (isLoading && currentSubscriptions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <SubscriptionHeader
         user={user}
         onLogout={handleLogout}
         onLogin={() => setIsAuthModalOpen(true)}
-        onAddSubscription={() => setIsAddModalOpen(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* サブスク追加ボタン */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 flex justify-end">
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={handleAddSubscriptionClick}
             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-600 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
           >
             <span>➕</span>
@@ -109,10 +127,10 @@ export const SubscriptionManagerContainer: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="px-6 py-8">
             {error && (
-              <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+              <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded">
                 {error}
               </div>
             )}
@@ -120,7 +138,7 @@ export const SubscriptionManagerContainer: React.FC = () => {
             {currentSubscriptions.length === 0 ? (
               <EmptyState
                 user={user}
-                onAddSubscription={() => setIsAddModalOpen(true)}
+                onAddSubscription={handleAddSubscriptionClick}
               />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,6 +147,7 @@ export const SubscriptionManagerContainer: React.FC = () => {
                   <SubscriptionCalendar
                     subscriptions={currentSubscriptions}
                     getCategoryDisplayName={getCategoryDisplayName}
+                    onDateClick={handleDateClick}
                   />
                 </div>
                 {/* サブスク一覧 - 1/3の幅 */}
@@ -164,24 +183,19 @@ export const SubscriptionManagerContainer: React.FC = () => {
           onClose={() => setIsAddModalOpen(false)}
           isGuest={!user}
           onSuccess={handleAddSuccess}
+          initialDate={selectedDate || undefined}
         />
       </Modal>
 
       {editingSubscription && (
         <Modal
           isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingSubscription(null);
-          }}
+          onClose={() => setIsEditModalOpen(false)}
           title="サブスクリプションを編集"
         >
           <EditSubscriptionForm
             subscription={editingSubscription}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setEditingSubscription(null);
-            }}
+            onClose={() => setIsEditModalOpen(false)}
             isGuest={!user}
             onSuccess={handleEditSuccess}
           />
@@ -190,12 +204,9 @@ export const SubscriptionManagerContainer: React.FC = () => {
 
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
-        subscription={deletingSubscription}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeletingSubscription(null);
-        }}
+        onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDeleteSubscription}
+        subscription={deletingSubscription}
       />
     </div>
   );

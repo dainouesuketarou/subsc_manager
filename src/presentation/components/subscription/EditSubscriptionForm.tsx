@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useGuestSubscriptions } from '../../contexts/GuestSubscriptionContext';
+import { useLoading } from '../../contexts/LoadingContext';
 import { SubscriptionData } from '../../types/subscription';
 
 interface EditSubscriptionFormProps {
@@ -41,6 +42,7 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const { updateSubscription } = useGuestSubscriptions();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,11 +76,26 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
         if (onSuccess) onSuccess();
       } else {
         // ログインユーザーの場合、APIを呼び出し
+        showLoading('サブスクリプションを更新中...');
+
+        // Supabaseクライアントからセッションを取得
+        const { supabase } = await import(
+          '../../../infrastructure/supabase/client'
+        );
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error('No valid session found');
+        }
+
         const response = await fetch(`/api/subscriptions/${subscription.id}`, {
           method: 'PUT',
           headers: {
+            Authorization: `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
           body: JSON.stringify({
             name,
@@ -91,16 +108,28 @@ export const EditSubscriptionForm: React.FC<EditSubscriptionFormProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('サブスクリプションの更新に失敗しました');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || 'サブスクリプションの更新に失敗しました'
+          );
         }
 
+        const updatedSubscription = await response.json();
+
+        // 成功時は即座にモーダルを閉じる
         onClose();
         if (onSuccess) onSuccess();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'エラーが発生しました');
+      console.error('Update subscription error:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'サブスクリプションの更新に失敗しました'
+      );
     } finally {
       setIsLoading(false);
+      hideLoading();
     }
   };
 

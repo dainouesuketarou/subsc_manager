@@ -1,4 +1,5 @@
 import { ISubscriptionRepository } from '../../domain/repositories/ISubscriptionRepository';
+import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { Subscription } from '../../domain/entities/Subscription';
 import { Money } from '../../domain/value-objects/Money';
 import { PaymentCycleValue } from '../../domain/value-objects/PaymentCycle';
@@ -20,7 +21,10 @@ export interface UpdateSubscriptionResponse {
 }
 
 export class UpdateSubscriptionUseCase {
-  constructor(private subscriptionRepository: ISubscriptionRepository) {}
+  constructor(
+    private subscriptionRepository: ISubscriptionRepository,
+    private userRepository: IUserRepository
+  ) {}
 
   async execute(
     request: UpdateSubscriptionRequest
@@ -48,6 +52,17 @@ export class UpdateSubscriptionUseCase {
       throw new Error('必須フィールドが不足しています');
     }
 
+    // SupabaseのユーザーIDをPrismaのユーザーIDに変換
+    let prismaUserId = userId;
+    try {
+      const user = await this.userRepository.findBySupabaseUserId(userId);
+      if (user) {
+        prismaUserId = user.getId();
+      }
+    } catch (error) {
+      console.warn('Failed to find user by Supabase ID:', error);
+    }
+
     // サブスクリプションが存在するか、かつユーザーのものかを確認
     const existingSubscription =
       await this.subscriptionRepository.findById(subscriptionId);
@@ -55,7 +70,7 @@ export class UpdateSubscriptionUseCase {
       throw new Error('サブスクリプションが見つかりません');
     }
 
-    if (existingSubscription.toDTO().userId !== userId) {
+    if (existingSubscription.toDTO().userId !== prismaUserId) {
       throw new Error('このサブスクリプションを更新する権限がありません');
     }
 
@@ -66,7 +81,7 @@ export class UpdateSubscriptionUseCase {
     const categoryValue = SubscriptionCategoryValue.create(category);
     const updatedSubscription = Subscription.reconstitute({
       id: subscriptionId,
-      userId: userId,
+      userId: prismaUserId,
       name: name,
       money: money,
       paymentCycle: paymentCycleValue,

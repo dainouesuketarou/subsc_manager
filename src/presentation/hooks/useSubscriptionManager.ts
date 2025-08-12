@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 import { useGuestSubscriptions } from '../contexts/GuestSubscriptionContext';
+import { useLoading } from '../contexts/LoadingContext';
 import { SubscriptionData } from '../types/subscription';
 import { ExchangeRateService } from '../../infrastructure/services/ExchangeRateService';
 
 export const useSubscriptionManager = () => {
   const { user, signOut } = useUnifiedAuth();
+  const { showLoading, hideLoading } = useLoading();
   const {
     subscriptions: guestSubscriptions,
     addSubscription,
@@ -45,17 +47,31 @@ export const useSubscriptionManager = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/subscriptions');
+      // 既存のSupabaseクライアントを使用
+      const { supabase } = await import('../../infrastructure/supabase/client');
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const response = await fetch('/api/subscriptions', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch subscriptions');
       }
 
       const data = await response.json();
-      // APIレスポンスが { subscriptions: [...] } の形式の場合、subscriptionsプロパティを取得
-      const subscriptions = Array.isArray(data)
-        ? data
-        : data.subscriptions || [];
+      // APIレスポンスは { subscriptions: [...] } の形式で返される
+      const subscriptions = data.subscriptions || [];
       setCurrentSubscriptions(subscriptions);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -73,21 +89,50 @@ export const useSubscriptionManager = () => {
         return;
       }
 
+      showLoading('サブスクリプションを削除中...');
+
       try {
+        // 既存のSupabaseクライアントを使用
+        const { supabase } = await import(
+          '../../infrastructure/supabase/client'
+        );
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error('No valid session found');
+        }
+
         const response = await fetch(`/api/subscriptions/${subscription.id}`, {
           method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
         });
 
         if (!response.ok) {
           throw new Error('Failed to delete subscription');
         }
 
-        await fetchSubscriptions();
+        // 削除成功後、即座にローカル状態を更新
+        setCurrentSubscriptions(prev =>
+          prev.filter(sub => sub.id !== subscription.id)
+        );
+
+        // バックグラウンドでサブスクリプション一覧を再取得
+        setTimeout(() => {
+          fetchSubscriptions();
+        }, 100);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        hideLoading();
       }
     },
-    [user, fetchSubscriptions, deleteSubscription]
+    [user, fetchSubscriptions, deleteSubscription, showLoading, hideLoading]
   );
 
   // 現在のサブスクリプションを更新

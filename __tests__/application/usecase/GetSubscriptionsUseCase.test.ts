@@ -1,15 +1,26 @@
 import { GetSubscriptionsUseCase } from '../../../src/application/usecase/GetSubscriptionsUseCase';
 import { ISubscriptionRepository } from '../../../src/domain/repositories/ISubscriptionRepository';
+import { IUserRepository } from '../../../src/domain/repositories/IUserRepository';
 import { Subscription } from '../../../src/domain/entities/Subscription';
 import { Money } from '../../../src/domain/value-objects/Money';
 import { PaymentCycleValue } from '../../../src/domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../../../src/domain/value-objects/SubscriptionCategory';
 
 // モックリポジトリ
-const mockRepository: jest.Mocked<ISubscriptionRepository> = {
+const mockSubscriptionRepository: jest.Mocked<ISubscriptionRepository> = {
   create: jest.fn(),
   findById: jest.fn(),
   findByUserId: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
+
+const mockUserRepository: jest.Mocked<IUserRepository> = {
+  create: jest.fn(),
+  createWithSupabaseUser: jest.fn(),
+  findById: jest.fn(),
+  findByEmail: jest.fn(),
+  findBySupabaseUserId: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
 };
@@ -18,7 +29,10 @@ describe('GetSubscriptionsUseCase', () => {
   let useCase: GetSubscriptionsUseCase;
 
   beforeEach(() => {
-    useCase = new GetSubscriptionsUseCase(mockRepository);
+    useCase = new GetSubscriptionsUseCase(
+      mockSubscriptionRepository,
+      mockUserRepository
+    );
     jest.clearAllMocks();
   });
 
@@ -41,14 +55,16 @@ describe('GetSubscriptionsUseCase', () => {
         ),
       ];
 
-      mockRepository.findByUserId = jest
+      mockSubscriptionRepository.findByUserId = jest
         .fn()
         .mockResolvedValue(mockSubscriptions);
 
       const request = { userId: 'user-123' };
       const result = await useCase.execute(request);
 
-      expect(mockRepository.findByUserId).toHaveBeenCalledWith('user-123');
+      expect(mockSubscriptionRepository.findByUserId).toHaveBeenCalledWith(
+        'user-123'
+      );
       expect(result.subscriptions).toHaveLength(2);
       expect(result.subscriptions[0].name).toBe('Netflix');
       expect(result.subscriptions[0].price).toBe(1000);
@@ -63,12 +79,12 @@ describe('GetSubscriptionsUseCase', () => {
     });
 
     it('サブスクリプションが存在しない場合、空配列を返す', async () => {
-      mockRepository.findByUserId = jest.fn().mockResolvedValue([]);
+      mockSubscriptionRepository.findByUserId = jest.fn().mockResolvedValue([]);
 
       const request = { userId: 'user-with-no-subs' };
       const result = await useCase.execute(request);
 
-      expect(mockRepository.findByUserId).toHaveBeenCalledWith(
+      expect(mockSubscriptionRepository.findByUserId).toHaveBeenCalledWith(
         'user-with-no-subs'
       );
       expect(result.subscriptions).toHaveLength(0);
@@ -85,7 +101,7 @@ describe('GetSubscriptionsUseCase', () => {
         ),
       ];
 
-      mockRepository.findByUserId = jest
+      mockSubscriptionRepository.findByUserId = jest
         .fn()
         .mockResolvedValue(mockSubscriptions);
 
@@ -107,7 +123,7 @@ describe('GetSubscriptionsUseCase', () => {
         ),
       ];
 
-      mockRepository.findByUserId = jest
+      mockSubscriptionRepository.findByUserId = jest
         .fn()
         .mockResolvedValue(mockSubscriptions);
 
@@ -142,7 +158,7 @@ describe('GetSubscriptionsUseCase', () => {
         )
       );
 
-      mockRepository.findByUserId = jest
+      mockSubscriptionRepository.findByUserId = jest
         .fn()
         .mockResolvedValue(mockSubscriptions);
 
@@ -156,7 +172,7 @@ describe('GetSubscriptionsUseCase', () => {
     });
 
     it('リポジトリでエラーが発生した場合にエラーをスローする', async () => {
-      mockRepository.findByUserId = jest
+      mockSubscriptionRepository.findByUserId = jest
         .fn()
         .mockRejectedValue(new Error('Database error'));
 
@@ -166,12 +182,12 @@ describe('GetSubscriptionsUseCase', () => {
     });
 
     it('userIdが空の場合でも正常に処理される', async () => {
-      mockRepository.findByUserId = jest.fn().mockResolvedValue([]);
+      mockSubscriptionRepository.findByUserId = jest.fn().mockResolvedValue([]);
 
       const request = { userId: '' };
       const result = await useCase.execute(request);
 
-      expect(mockRepository.findByUserId).toHaveBeenCalledWith('');
+      expect(mockSubscriptionRepository.findByUserId).toHaveBeenCalledWith('');
       expect(result.subscriptions).toHaveLength(0);
     });
   });

@@ -19,12 +19,22 @@ jest.mock('@/infrastructure/supabase/client', () => ({
   },
 }));
 
+// windowオブジェクトをモック
+Object.defineProperty(global, 'window', {
+  value: {
+    location: { origin: 'http://localhost:3000' },
+  },
+  writable: true,
+});
+
 import { SupabaseAuthService } from '@/infrastructure/services/SupabaseAuthService';
 const { supabase } = require('@/infrastructure/supabase/client');
 
 describe('Supabase Migration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // console.errorをモック
+    console.error = jest.fn();
   });
 
   describe('SupabaseAuthService', () => {
@@ -36,8 +46,14 @@ describe('Supabase Migration Tests', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        user: mockUser,
+      };
+
       const mockResponse = {
-        data: { user: mockUser, session: null },
+        data: { user: mockUser, session: mockSession },
         error: null,
       };
 
@@ -65,8 +81,14 @@ describe('Supabase Migration Tests', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        user: mockUser,
+      };
+
       const mockResponse = {
-        data: { user: mockUser, session: null },
+        data: { user: mockUser, session: mockSession },
         error: null,
       };
 
@@ -89,7 +111,7 @@ describe('Supabase Migration Tests', () => {
     });
 
     it('should handle sign up error', async () => {
-      const mockError = { message: 'Email already exists' };
+      const mockError = { message: 'User already registered' };
       const mockResponse = {
         data: { user: null, session: null },
         error: mockError,
@@ -103,11 +125,11 @@ describe('Supabase Migration Tests', () => {
       );
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe('Email already exists');
+      expect(result.error).toBe('このメールアドレスは既に登録されています');
     });
 
     it('should handle sign in error', async () => {
-      const mockError = { message: 'Invalid credentials' };
+      const mockError = { message: 'Invalid login credentials' };
       const mockResponse = {
         data: { user: null, session: null },
         error: mockError,
@@ -123,7 +145,9 @@ describe('Supabase Migration Tests', () => {
       );
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe('Invalid credentials');
+      expect(result.error).toBe(
+        'メールアドレスまたはパスワードが正しくありません'
+      );
     });
 
     it('should sign out successfully', async () => {
@@ -167,11 +191,6 @@ describe('Supabase Migration Tests', () => {
         mockResponse
       );
 
-      // windowオブジェクトをモック
-      global.window = {
-        location: { origin: 'http://localhost:3000' },
-      } as any;
-
       const result =
         await SupabaseAuthService.resetPassword('test@example.com');
 
@@ -200,7 +219,9 @@ describe('Supabase Migration Tests', () => {
       );
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe('Network error');
+      expect(result.error).toBe(
+        'ログインに失敗しました。しばらく時間をおいて再度お試しください。'
+      );
     });
 
     it('should handle unknown errors', async () => {
@@ -212,7 +233,9 @@ describe('Supabase Migration Tests', () => {
       );
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe('Unknown error');
+      expect(result.error).toBe(
+        'アカウント作成に失敗しました。しばらく時間をおいて再度お試しください。'
+      );
     });
   });
 });

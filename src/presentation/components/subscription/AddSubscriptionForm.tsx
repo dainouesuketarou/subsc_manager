@@ -2,30 +2,50 @@
 
 import React, { useState } from 'react';
 import { useGuestSubscriptions } from '../../contexts/GuestSubscriptionContext';
+import { useLoading } from '../../contexts/LoadingContext';
 
 interface AddSubscriptionFormProps {
   onClose: () => void;
   isGuest: boolean;
   onSuccess?: () => void;
+  initialDate?: Date;
 }
 
 export const AddSubscriptionForm: React.FC<AddSubscriptionFormProps> = ({
   onClose,
   isGuest,
   onSuccess,
+  initialDate,
 }) => {
+  // 日付をYYYY-MM-DD形式の文字列に変換する関数
+  const formatDateToYYYYMMDD = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // YYYY-MM-DD形式の文字列をDateオブジェクトに変換する関数
+  const parseDateFromYYYYMMDD = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('JPY');
   const [paymentCycle, setPaymentCycle] = useState('MONTHLY');
   const [category, setCategory] = useState('OTHER');
   const [paymentStartDate, setPaymentStartDate] = useState(
-    new Date().toISOString().split('T')[0]
+    initialDate
+      ? formatDateToYYYYMMDD(initialDate)
+      : formatDateToYYYYMMDD(new Date())
   );
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const { addSubscription } = useGuestSubscriptions();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,17 +73,32 @@ export const AddSubscriptionForm: React.FC<AddSubscriptionFormProps> = ({
           currency,
           paymentCycle,
           category,
-          paymentStartDate: new Date(paymentStartDate),
+          paymentStartDate: parseDateFromYYYYMMDD(paymentStartDate),
         });
         onClose();
         if (onSuccess) onSuccess();
       } else {
         // ログインユーザーの場合、APIを呼び出し
+        showLoading('サブスクリプションを追加中...');
+
+        // Supabaseクライアントからセッションを取得
+        const { supabase } = await import(
+          '../../../infrastructure/supabase/client'
+        );
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error('認証セッションが見つかりません');
+        }
+
         const response = await fetch('/api/subscriptions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             name,
@@ -76,16 +111,28 @@ export const AddSubscriptionForm: React.FC<AddSubscriptionFormProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('サブスクリプションの追加に失敗しました');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || 'サブスクリプションの追加に失敗しました'
+          );
         }
 
+        const newSubscription = await response.json();
+
+        // 成功時は即座にモーダルを閉じる
         onClose();
         if (onSuccess) onSuccess();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'エラーが発生しました');
+      console.error('Add subscription error:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'サブスクリプションの追加に失敗しました'
+      );
     } finally {
       setIsLoading(false);
+      hideLoading();
     }
   };
 

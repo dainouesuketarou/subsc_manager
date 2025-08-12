@@ -1,46 +1,55 @@
 import React from 'react';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 interface SubscriptionHeaderProps {
   user: { email: string } | null;
   onLogout: () => void;
   onLogin: () => void;
-  onAddSubscription: () => void;
 }
 
 export const SubscriptionHeader: React.FC<SubscriptionHeaderProps> = ({
   user,
   onLogout,
   onLogin,
-  onAddSubscription,
 }) => {
   return (
-    <div className="bg-white shadow-lg border-b border-gray-200">
+    <div className="bg-gradient-to-r from-purple-500/80 via-blue-500/80 to-indigo-500/80 backdrop-blur-md shadow-lg border-b border-purple-400/30 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4 md:py-6">
+        <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
-            <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 whitespace-nowrap">
-              <span className="emoji-icon">📱</span>
-              サブスクリプション管理
-            </h1>
+            <div className="flex items-center space-x-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 shadow-md">
+                <span className="text-xl text-white">📱</span>
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-black tracking-tight drop-shadow-lg relative">
+                  <span className="bg-gradient-to-r from-white via-purple-100 to-blue-100 bg-clip-text text-transparent">
+                    サブスクリプション管理
+                  </span>
+                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400 via-blue-400 to-indigo-400 rounded-full opacity-60"></div>
+                </h1>
+                <p className="text-purple-100 text-xs md:text-sm font-medium tracking-wide mt-1">
+                  <span className="bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent">
+                    あなたのサブスクをスマートに管理
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
             {user ? (
               <>
-                <span className="hidden sm:inline text-sm text-gray-600">
-                  <span className="emoji-icon">👤</span>
-                  {user.email}
-                </span>
-                <button
-                  onClick={onAddSubscription}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white py-1 md:py-2 px-2 md:px-4 rounded-lg hover:from-blue-600 hover:to-purple-600 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover-lift text-xs md:text-sm"
-                >
-                  <span className="emoji-icon">➕</span>
-                  <span className="hidden sm:inline">追加</span>
-                </button>
+                <div className="hidden sm:flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                  <span className="text-white text-sm font-medium">
+                    <span className="emoji-icon">👤</span>
+                    {user.email}
+                  </span>
+                </div>
                 <button
                   onClick={onLogout}
-                  className="bg-gray-500 text-white py-1 md:py-2 px-2 md:px-4 rounded-lg hover:bg-gray-600 font-semibold transition-all duration-200 text-xs md:text-sm"
+                  className="bg-white/20 backdrop-blur-sm text-white py-1.5 px-3 rounded-lg hover:bg-white/30 font-medium transition-all duration-200 shadow-sm hover:shadow-md text-sm border border-white/30"
                 >
                   <span className="emoji-icon">🚪</span>
                   <span className="hidden sm:inline">ログアウト</span>
@@ -49,7 +58,7 @@ export const SubscriptionHeader: React.FC<SubscriptionHeaderProps> = ({
             ) : (
               <button
                 onClick={onLogin}
-                className="bg-gradient-to-r from-green-500 to-blue-500 text-white py-1 md:py-2 px-2 md:px-4 rounded-lg hover:from-green-600 hover:to-blue-600 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover-lift text-xs md:text-sm"
+                className="bg-white text-purple-600 py-1.5 px-3 rounded-lg hover:bg-purple-50 font-medium transition-all duration-200 shadow-sm hover:shadow-md text-sm"
               >
                 <span className="emoji-icon">🔐</span>
                 <span className="hidden sm:inline">ログイン</span>
