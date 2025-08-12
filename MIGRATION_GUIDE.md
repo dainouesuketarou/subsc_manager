@@ -52,7 +52,11 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # データベース接続（Supabase PostgreSQL）
-DATABASE_URL=your_supabase_database_url
+# アプリケーションからの接続用（Connection Pooler経由）
+DATABASE_URL=postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+# マイグレーション用（直接接続）
+DIRECT_URL=postgresql://postgres.[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
 
 # ExchangeRate-API.com のAPIキー
 EXCHANGE_RATE_API_KEY=your_api_key_here
