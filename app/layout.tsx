@@ -27,6 +27,11 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL('https://subsc-manager.vercel.app'),
+  icons: {
+    icon: '/subtrack_icon.png',
+    shortcut: '/subtrack_icon.png',
+    apple: '/subtrack_icon.png',
+  },
   openGraph: {
     title: 'SubscManager - サブスクリプション管理アプリ',
     description:
@@ -75,8 +80,8 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/subtrack_icon.png" />
+        <link rel="apple-touch-icon" href="/subtrack_icon.png" />
         <meta name="theme-color" content="#8B5CF6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>

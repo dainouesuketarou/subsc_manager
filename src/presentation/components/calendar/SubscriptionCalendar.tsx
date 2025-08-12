@@ -289,9 +289,9 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 h-full flex flex-col">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-1 sm:p-3 h-full flex flex-col">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+      <div className="flex items-center justify-between mb-2 sm:mb-3 flex-shrink-0">
         <button
           onClick={goToPreviousMonth}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
@@ -311,7 +311,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
           </svg>
         </button>
 
-        <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">
+        <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white">
           {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
         </h2>
 
@@ -336,18 +336,18 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
       </div>
 
       {/* 月の合計支払額 */}
-      <div className="mb-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-700 flex-shrink-0">
+      <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-700 flex-shrink-0">
         <div className="text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
           今月の支払予定額
         </div>
-        <div className="text-lg md:text-xl font-bold text-blue-900 dark:text-blue-100">
+        <div className="text-base sm:text-lg md:text-xl font-bold text-blue-900 dark:text-blue-100">
           {formatCurrency(monthlyTotal, 'JPY')}
         </div>
       </div>
 
       {/* カテゴリー別支払額 */}
       {Object.keys(monthlyTotalByCategory).length > 0 && (
-        <div className="mb-3 flex-shrink-0">
+        <div className="mb-2 sm:mb-3 flex-shrink-0">
           <div className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1">
             カテゴリー別支払額
           </div>
@@ -389,7 +389,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
       </div>
 
       {/* カレンダーグリッド */}
-      <div className="grid grid-cols-7 gap-1 flex-1 overflow-y-auto">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 flex-1 overflow-y-auto">
         {calendarDays.map((date, index) => {
           const payments = getPaymentsForDate(date);
           const totalPayment = payments.reduce(
@@ -401,7 +401,7 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
             <div
               key={index}
               className={`
-                min-h-[60px] p-1 border border-gray-200 dark:border-gray-600 rounded-md text-xs cursor-pointer
+                min-h-[60px] sm:min-h-[80px] p-0.5 sm:p-1 border border-gray-200 dark:border-gray-600 rounded-md text-xs cursor-pointer
                 ${isToday(date) ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-600' : ''}
                 ${!isCurrentMonth(date) ? 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'}
                 ${payments.length > 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600' : ''}
@@ -411,11 +411,13 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
               onClick={() => onDateClick?.(date)}
               title="クリックしてサブスクを追加"
             >
-              <div className="text-xs font-semibold mb-1">{date.getDate()}</div>
+              <div className="text-xs font-semibold mb-1 text-center">
+                {date.getDate()}
+              </div>
 
               {payments.length > 0 && (
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-green-800 dark:text-green-300">
+                  <div className="text-xs font-bold text-green-800 dark:text-green-300 text-center">
                     ¥{totalPayment.toLocaleString()}
                   </div>
                   {payments.slice(0, 1).map(payment => (
@@ -423,10 +425,19 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
                       key={payment.id}
                       className={`text-xs p-0.5 rounded ${getCategoryColor(payment.category)}`}
                     >
-                      <div className="flex items-center gap-1">
-                        <span>{getCategoryEmoji(payment.category)}</span>
-                        <span className="truncate text-xs font-medium">
-                          {payment.name}
+                      <div className="flex flex-col items-center text-center">
+                        <span className="text-sm mb-0.5 hidden sm:inline">
+                          {getCategoryEmoji(payment.category)}
+                        </span>
+                        <span className="text-xs font-medium leading-tight">
+                          <span className="hidden sm:inline">
+                            {payment.name}
+                          </span>
+                          <span className="sm:hidden">
+                            {payment.name.length > 6
+                              ? payment.name.substring(0, 6) + '...'
+                              : payment.name}
+                          </span>
                         </span>
                       </div>
                     </div>
