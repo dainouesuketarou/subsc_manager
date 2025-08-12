@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { SupabaseAuthMiddleware } from '../../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
+import { DatabaseErrorMiddleware } from '../../../../src/infrastructure/middleware/DatabaseErrorMiddleware';
 import { PrismaSubscriptionRepository } from '../../../../src/infrastructure/PrismaSubscriptionRepository';
 import { PrismaUserRepository } from '../../../../src/infrastructure/PrismaUserRepository';
 import { DeleteSubscriptionUseCase } from '../../../../src/application/usecase/DeleteSubscriptionUseCase';
 import { UpdateSubscriptionUseCase } from '../../../../src/application/usecase/UpdateSubscriptionUseCase';
+import { prisma } from '../../../../src/infrastructure/supabase/client';
 
-const prisma = new PrismaClient();
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
 const userRepository = new PrismaUserRepository(prisma);
 
@@ -50,16 +50,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'サブスクリプションが削除されました' });
   } catch (error) {
-    console.error('Delete subscription error:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'サブスクリプションの削除に失敗しました',
-      },
-      { status: 500 }
-    );
+    return DatabaseErrorMiddleware.handleError(error);
   }
 }
 
@@ -101,21 +92,21 @@ export async function PUT(
       price,
       currency,
       paymentCycle,
-      category: category || 'OTHER',
+      category,
       paymentStartDate,
     });
 
     return NextResponse.json({ message: 'サブスクリプションが更新されました' });
   } catch (error) {
-    console.error('Update subscription error:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'サブスクリプションの更新に失敗しました',
-      },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      if (
+        error.message.includes('Invalid payment cycle') ||
+        error.message.includes('Invalid currency')
+      ) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+    }
+
+    return DatabaseErrorMiddleware.handleError(error);
   }
 }
