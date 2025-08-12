@@ -19,14 +19,14 @@ on:
 
 # グローバル環境変数
 env:
-  NODE_VERSION: '18'  # Node.jsのバージョン
+  NODE_VERSION: '18' # Node.jsのバージョン
 
 jobs:
   # =============================================================================
   # コードレビュー用のチェック - コード品質とコーディング規約の確認
   # =============================================================================
   code-review:
-    runs-on: self-hosted  # Self-hosted Runnerを使用（Supabase接続のため）
+    runs-on: self-hosted # Self-hosted Runnerを使用（Supabase接続のため）
     steps:
       # リポジトリのコードをチェックアウト
       - name: Checkout code
@@ -80,7 +80,7 @@ jobs:
   # テスト実行 - ユニットテストとインテグレーションテスト
   # =============================================================================
   test:
-    runs-on: self-hosted  # Self-hosted Runnerを使用
+    runs-on: self-hosted # Self-hosted Runnerを使用
     # PostgreSQLサービスコンテナの設定（テスト用データベース）
     services:
       postgres:
@@ -140,13 +140,13 @@ jobs:
           file: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: false  # アップロード失敗でもCIを継続
+          fail_ci_if_error: false # アップロード失敗でもCIを継続
 
   # =============================================================================
   # ビルドテスト - アプリケーションのビルド確認
   # =============================================================================
   build:
-    runs-on: self-hosted  # Self-hosted Runnerを使用
+    runs-on: self-hosted # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -173,7 +173,7 @@ jobs:
   # セキュリティチェック - 依存関係の脆弱性チェック
   # =============================================================================
   security:
-    runs-on: self-hosted  # Self-hosted Runnerを使用
+    runs-on: self-hosted # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -205,7 +205,7 @@ jobs:
   # パフォーマンスチェック - バンドルサイズとファイルサイズの確認
   # =============================================================================
   performance:
-    runs-on: self-hosted  # Self-hosted Runnerを使用
+    runs-on: self-hosted # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -235,7 +235,7 @@ jobs:
   # PR ラベルチェック - プルリクエストの品質確認
   # =============================================================================
   pr-labels:
-    runs-on: self-hosted  # Self-hosted Runnerを使用
+    runs-on: self-hosted # Self-hosted Runnerを使用
     steps:
       # PRラベルの確認
       - name: Check PR labels
