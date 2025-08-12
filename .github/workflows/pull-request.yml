@@ -1,38 +1,61 @@
+# =============================================================================
+# Pull Request Checks - プルリクエスト品質チェック
+# =============================================================================
+# このワークフローは以下の品質チェックを実行します：
+# 1. コードレビュー用チェック（リント、フォーマット、型チェック）
+# 2. テスト実行（ユニットテスト、カバレッジ）
+# 3. ビルドテスト
+# 4. セキュリティチェック
+# 5. パフォーマンスチェック
+# 6. PRラベル・説明チェック
+# =============================================================================
+
 name: Pull Request Checks
 
+# トリガー条件：main/developブランチへのPR
 on:
   pull_request:
     branches: [main, develop]
 
+# グローバル環境変数
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '18'  # Node.jsのバージョン
 
 jobs:
-  # コードレビュー用のチェック
+  # =============================================================================
+  # コードレビュー用のチェック - コード品質とコーディング規約の確認
+  # =============================================================================
   code-review:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用（Supabase接続のため）
     steps:
+      # リポジトリのコードをチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Node.js環境のセットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      # 依存関係のインストール
       - name: Install dependencies
         run: npm ci
 
+      # ESLintによるコード品質チェック
       - name: Run ESLint
         run: npm run lint
 
+      # Prettierによるコードフォーマットチェック
       - name: Run Prettier check
         run: npm run format:check
 
+      # TypeScriptコンパイラによる型チェック
       - name: Run TypeScript check
         run: npm run type-check
 
+      # デバッグ用console.log文の検出
       - name: Check for console.log statements
         run: |
           if grep -r "console\.log" src/ --include="*.ts" --include="*.tsx"; then
@@ -43,6 +66,7 @@ jobs:
             echo "✅ No console.log statements found"
           fi
 
+      # TODOコメントの検出（警告のみ）
       - name: Check for TODO comments
         run: |
           if grep -r "TODO" src/ --include="*.ts" --include="*.tsx"; then
@@ -52,9 +76,12 @@ jobs:
             echo "✅ No TODO comments found"
           fi
 
-  # テスト実行
+  # =============================================================================
+  # テスト実行 - ユニットテストとインテグレーションテスト
+  # =============================================================================
   test:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用
+    # PostgreSQLサービスコンテナの設定（テスト用データベース）
     services:
       postgres:
         image: postgres:15
@@ -83,6 +110,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # テスト用データベースのセットアップ
       - name: Setup test database
         run: |
           npx prisma generate
@@ -91,29 +119,34 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
+      # テストの実行
       - name: Run tests
         run: npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
+      # テストカバレッジレポートの生成
       - name: Generate test coverage report
         run: npm run test:coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
+      # カバレッジレポートをCodecovにアップロード
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: false
+          fail_ci_if_error: false  # アップロード失敗でもCIを継続
 
-  # ビルドテスト
+  # =============================================================================
+  # ビルドテスト - アプリケーションのビルド確認
+  # =============================================================================
   build:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -127,16 +160,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Prismaクライアントの生成
       - name: Setup Prisma
         run: |
           npx prisma generate
 
+      # Next.jsアプリケーションのビルド
       - name: Build application
         run: npm run build
 
-  # セキュリティチェック
+  # =============================================================================
+  # セキュリティチェック - 依存関係の脆弱性チェック
+  # =============================================================================
   security:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -150,9 +187,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # npm auditによる脆弱性チェック
       - name: Run security audit
         run: npm audit --audit-level=moderate
 
+      # 高深刻度の脆弱性チェック（失敗時はCIを停止）
       - name: Check for known vulnerabilities
         run: |
           if npm audit --audit-level=high; then
@@ -162,9 +201,11 @@ jobs:
             echo "✅ No high severity vulnerabilities found"
           fi
 
-  # パフォーマンスチェック
+  # =============================================================================
+  # パフォーマンスチェック - バンドルサイズとファイルサイズの確認
+  # =============================================================================
   performance:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -178,20 +219,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # バンドルサイズの分析
       - name: Check bundle size
         run: |
           npm run build
           echo "Bundle size analysis completed"
 
+      # 大きなファイルの検出（行数ベース）
       - name: Check for large files
         run: |
           find . -name "*.js" -o -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -nr | head -10
           echo "Top 10 largest files by line count"
 
-  # PR ラベルチェック
+  # =============================================================================
+  # PR ラベルチェック - プルリクエストの品質確認
+  # =============================================================================
   pr-labels:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Self-hosted Runnerを使用
     steps:
+      # PRラベルの確認
       - name: Check PR labels
         run: |
           if [ -z "${{ github.event.pull_request.labels.*.name }}" ]; then
@@ -201,6 +247,7 @@ jobs:
             echo "✅ PR has labels: ${{ github.event.pull_request.labels.*.name }}"
           fi
 
+      # PR説明文の確認
       - name: Check PR description
         run: |
           if [ -z "${{ github.event.pull_request.body }}" ]; then

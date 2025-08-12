@@ -1,32 +1,51 @@
+# =============================================================================
+# CI/CD Pipeline - 継続的インテグレーション・デプロイメント
+# =============================================================================
+# このワークフローは以下の処理を実行します：
+# 1. コードの品質チェック（リント、型チェック）
+# 2. テスト実行
+# 3. ビルドテスト
+# 4. セキュリティチェック
+# 5. 本番環境へのデプロイ（mainブランチのみ）
+# =============================================================================
+
 name: CI/CD Pipeline
 
+# トリガー条件：main/developブランチへのプッシュとPR
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
 
+# グローバル環境変数
 env:
-  NODE_VERSION: '18'
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  NODE_VERSION: '18' # Node.jsのバージョン
+  DATABASE_URL: ${{ secrets.DATABASE_URL }} # データベース接続URL（シークレット）
 
 jobs:
-  # 依存関係のインストールとキャッシュ
+  # =============================================================================
+  # セットアップジョブ - 依存関係のインストールとキャッシュ
+  # =============================================================================
   setup:
     runs-on: ubuntu-latest
     steps:
+      # リポジトリのコードをチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Node.js環境のセットアップ（キャッシュ付き）
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'npm' # npmキャッシュを有効化
 
+      # 依存関係のインストール
       - name: Install dependencies
-        run: npm ci
+        run: npm ci # package-lock.jsonに基づいて厳密にインストール
 
+      # Prismaとnode_modulesのキャッシュ設定
       - name: Cache Prisma
         uses: actions/cache@v3
         with:
@@ -38,10 +57,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-  # コードの品質チェック
+  # =============================================================================
+  # リントジョブ - コードの品質チェック
+  # =============================================================================
   lint:
     runs-on: ubuntu-latest
-    needs: setup
+    needs: setup # setupジョブの完了を待つ
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,13 +76,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ESLintによるコード品質チェック
       - name: Run ESLint
         run: npm run lint
 
+      # Prettierによるコードフォーマットチェック
       - name: Run Prettier check
         run: npm run format:check
 
-  # TypeScript型チェック
+  # =============================================================================
+  # 型チェックジョブ - TypeScriptの型安全性チェック
+  # =============================================================================
   type-check:
     runs-on: ubuntu-latest
     needs: setup
@@ -78,13 +103,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # TypeScriptコンパイラによる型チェック
       - name: Run TypeScript check
         run: npm run type-check
 
-  # テスト実行
+  # =============================================================================
+  # テストジョブ - ユニットテストとインテグレーションテスト
+  # =============================================================================
   test:
     runs-on: ubuntu-latest
     needs: setup
+    # PostgreSQLサービスコンテナの設定（テスト用データベース）
     services:
       postgres:
         image: postgres:15
@@ -113,6 +142,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # テスト用データベースのセットアップ
       - name: Setup test database
         run: |
           npx prisma generate
@@ -121,22 +151,26 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
+      # テストの実行
       - name: Run tests
         run: npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
+      # テストカバレッジの生成
       - name: Run test coverage
         run: npm run test:coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           NODE_ENV: test
 
-  # ビルドテスト
+  # =============================================================================
+  # ビルドジョブ - アプリケーションのビルドテスト
+  # =============================================================================
   build:
     runs-on: ubuntu-latest
-    needs: [lint, type-check, test]
+    needs: [lint, type-check, test] # 前段階のジョブが全て成功することを要求
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -154,11 +188,13 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      # Next.jsアプリケーションのビルド
       - name: Build application
         run: npm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # ビルド成果物のアップロード（デプロイ用）
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -169,7 +205,9 @@ jobs:
             package.json
             prisma/schema.prisma
 
-  # セキュリティチェック
+  # =============================================================================
+  # セキュリティジョブ - 依存関係の脆弱性チェック
+  # =============================================================================
   security:
     runs-on: ubuntu-latest
     needs: setup
@@ -186,9 +224,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # npm auditによる脆弱性チェック
       - name: Run security audit
         run: npm audit --audit-level=moderate
 
+      # Snykによる詳細なセキュリティスキャン（オプション）
       - name: Run Snyk security scan (optional)
         # Snykトークンが設定されている場合のみ実行
         uses: snyk/actions/node@master
@@ -196,13 +236,15 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high --fail-on=all
-        continue-on-error: true
+        continue-on-error: true # 失敗してもワークフローを継続
 
-  # デプロイ（mainブランチへのプッシュ時のみ）
+  # =============================================================================
+  # デプロイジョブ - 本番環境へのデプロイ
+  # =============================================================================
   deploy:
     runs-on: ubuntu-latest
-    needs: [lint, type-check, test, build, security]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [lint, type-check, test, build, security] # 全てのチェックが成功することを要求
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # mainブランチへのプッシュ時のみ
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -222,26 +264,31 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # Vercelへのデプロイ
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          vercel-args: '--prod' # 本番環境へのデプロイ
 
-  # 通知
+  # =============================================================================
+  # 通知ジョブ - デプロイ結果の通知
+  # =============================================================================
   notify:
     runs-on: ubuntu-latest
     needs: [deploy]
-    if: always()
+    if: always() # デプロイの成功・失敗に関係なく実行
     steps:
+      # デプロイ成功時の通知
       - name: Notify on success
         if: needs.deploy.result == 'success'
         run: |
           echo "🎉 Deployment successful!"
           echo "Application deployed to production"
 
+      # デプロイ失敗時の通知
       - name: Notify on failure
         if: needs.deploy.result == 'failure'
         run: |
