@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 import { useGuestSubscriptions } from '../contexts/GuestSubscriptionContext';
 import { useLoading } from '../contexts/LoadingContext';
-import { SubscriptionData } from '../types/subscription';
+import { SubscriptionData } from '../../types/subscription';
 import { ExchangeRateService } from '../../infrastructure/services/ExchangeRateService';
 
 export const useSubscriptionManager = () => {

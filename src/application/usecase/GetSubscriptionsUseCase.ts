@@ -1,26 +1,9 @@
 import { ISubscriptionRepository } from '../../domain/repositories/ISubscriptionRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
-
-export interface GetSubscriptionsRequest {
-  userId: string;
-}
-
-export interface SubscriptionDTO {
-  id: string;
-  userId: string;
-  name: string;
-  price: number;
-  currency: string;
-  paymentCycle: string;
-  category: string;
-  paymentStartDate: Date;
-  subscribedAt: Date;
-  updatedAt: Date;
-}
-
-export interface GetSubscriptionsResponse {
-  subscriptions: SubscriptionDTO[];
-}
+import {
+  GetSubscriptionsDTO,
+  SubscriptionResponseDTO,
+} from '../dto/subscription';
 
 export class GetSubscriptionsUseCase {
   constructor(
@@ -29,8 +12,8 @@ export class GetSubscriptionsUseCase {
   ) {}
 
   async execute(
-    request: GetSubscriptionsRequest
-  ): Promise<GetSubscriptionsResponse> {
+    request: GetSubscriptionsDTO
+  ): Promise<SubscriptionResponseDTO> {
     // SupabaseのユーザーIDをPrismaのユーザーIDに変換
     let prismaUserId = request.userId;
     try {

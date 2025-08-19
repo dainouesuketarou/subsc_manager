@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { SubscriptionData } from '../../types/subscription';
+import { SubscriptionData } from '../../../types/subscription';
 import { ExchangeRateService } from '../../../infrastructure/services/ExchangeRateService';
 
 interface SubscriptionCalendarProps {
@@ -71,10 +71,12 @@ export const SubscriptionCalendar: React.FC<SubscriptionCalendarProps> = ({
   onDateClick,
 }) => {
   // subscriptionsがオブジェクトで、subscriptionsプロパティを持つ場合はそれを取得
-  const actualSubscriptions = Array.isArray(subscriptions)
-    ? subscriptions
-    : (subscriptions as { subscriptions?: SubscriptionData[] })
-        ?.subscriptions || [];
+  const actualSubscriptions = useMemo(() => {
+    return Array.isArray(subscriptions)
+      ? subscriptions
+      : (subscriptions as { subscriptions?: SubscriptionData[] })
+          ?.subscriptions || [];
+  }, [subscriptions]);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(

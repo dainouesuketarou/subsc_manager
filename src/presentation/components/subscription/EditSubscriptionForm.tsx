@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useGuestSubscriptions } from '../../contexts/GuestSubscriptionContext';
 import { useLoading } from '../../contexts/LoadingContext';
-import { SubscriptionData } from '../../types/subscription';
+import { SubscriptionData } from '../../../types/subscription';
 
 interface EditSubscriptionFormProps {
   subscription: SubscriptionData;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SubscriptionData } from '../../types/subscription';
+import { SubscriptionData } from '../../../types/subscription';
 import { ExchangeRateService } from '../../../infrastructure/services/ExchangeRateService';
 
 interface SubscriptionTableProps {

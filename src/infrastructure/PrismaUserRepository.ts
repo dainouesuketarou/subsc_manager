@@ -2,12 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { IUserRepository } from '../domain/repositories/IUserRepository';
 import { User } from '../domain/entities/User';
 import { Email } from '../domain/value-objects/Email';
+import { prisma } from './utils/PrismaClient';
 
 export class PrismaUserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prismaClient: PrismaClient = prisma) {}
 
   async findById(userId: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prismaClient.user.findUnique({
       where: { id: userId },
     });
 
@@ -26,7 +27,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findByEmail(email: Email): Promise<User> {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prismaClient.user.findUnique({
       where: { email: email.value },
     });
 
@@ -45,7 +46,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findBySupabaseUserId(supabaseUserId: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prismaClient.user.findUnique({
       where: { supabase_user_id: supabaseUserId },
     });
 
@@ -75,7 +76,7 @@ export class PrismaUserRepository implements IUserRepository {
       updated_at: dto.updatedAt,
     };
 
-    await this.prisma.user.create({ data });
+    await this.prismaClient.user.create({ data });
   }
 
   async createWithSupabaseUser(
@@ -94,11 +95,11 @@ export class PrismaUserRepository implements IUserRepository {
       updated_at: dto.updatedAt,
     };
 
-    await this.prisma.user.create({ data });
+    await this.prismaClient.user.create({ data });
   }
 
   async update(userId: string, email: Email): Promise<void> {
-    await this.prisma.user.update({
+    await this.prismaClient.user.update({
       where: { id: userId },
       data: {
         email: email.value,
@@ -112,7 +113,7 @@ export class PrismaUserRepository implements IUserRepository {
     supabaseUserId: string
   ): Promise<void> {
     try {
-      await this.prisma.user.update({
+      await this.prismaClient.user.update({
         where: { id: userId },
         data: {
           supabase_user_id: supabaseUserId,
@@ -125,7 +126,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async delete(userId: string): Promise<void> {
-    await this.prisma.user.delete({
+    await this.prismaClient.user.delete({
       where: { id: userId },
     });
   }

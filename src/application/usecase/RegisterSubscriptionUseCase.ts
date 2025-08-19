@@ -5,17 +5,7 @@ import { Money } from '../../domain/value-objects/Money';
 import { PaymentCycleValue } from '../../domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../../domain/value-objects/SubscriptionCategory';
 import { Email } from '../../domain/value-objects/Email';
-
-export interface RegisterSubscriptionRequest {
-  userId: string;
-  userEmail: string;
-  name: string;
-  price: number;
-  currency: string;
-  paymentCycle: string;
-  category: string;
-  paymentStartDate?: string;
-}
+import { CreateSubscriptionDTO } from '../dto/subscription';
 
 export interface RegisterSubscriptionResponse {
   subscriptionId: string;
@@ -28,7 +18,7 @@ export class RegisterSubscriptionUseCase {
   ) {}
 
   async execute(
-    request: RegisterSubscriptionRequest
+    request: CreateSubscriptionDTO
   ): Promise<RegisterSubscriptionResponse> {
     const {
       userId,

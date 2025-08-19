@@ -1,4 +1,6 @@
-import { supabase, AuthResponse } from '../supabase/client';
+import { supabase, AuthResponse, SupabaseUser } from '../supabase/client';
+import { User } from '../../domain/entities/User';
+import { Email } from '../../domain/value-objects/Email';
 
 export class SupabaseAuthService {
   /**
@@ -89,6 +91,19 @@ export class SupabaseAuthService {
   }
 
   /**
+   * SupabaseUserをUserエンティティに変換
+   */
+  private static convertToUser(supabaseUser: SupabaseUser): User {
+    return User.reconstitute({
+      id: supabaseUser.id,
+      email: new Email(supabaseUser.email),
+      createdAt: new Date(supabaseUser.created_at),
+      updatedAt: new Date(supabaseUser.updated_at),
+      supabaseUserId: supabaseUser.id,
+    });
+  }
+
+  /**
    * メール/パスワードでサインアップ
    */
   static async signUp(email: string, password: string): Promise<AuthResponse> {
@@ -128,7 +143,10 @@ export class SupabaseAuthService {
         session: data.session,
       };
     } catch (error) {
-      console.error('SignUp error:', error);
+      // テスト環境ではエラーログを抑制
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('SignUp error:', error);
+      }
       return {
         user: null,
         session: null,

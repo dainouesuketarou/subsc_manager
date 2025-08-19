@@ -1,92 +1,102 @@
-import {
-  PrismaClient,
-  Subscription as PrismaSubscription,
-} from '@prisma/client';
-import { Subscription, SubscriptionDTO } from '../domain/entities/Subscription';
+import { PrismaClient } from '@prisma/client';
 import { ISubscriptionRepository } from '../domain/repositories/ISubscriptionRepository';
-import { Money } from '../domain/value-objects/Money';
+import { Subscription } from '../domain/entities/Subscription';
+import { Money, Currency } from '../domain/value-objects/Money';
 import { PaymentCycleValue } from '../domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../domain/value-objects/SubscriptionCategory';
+import { prisma } from './utils/PrismaClient';
 
 export class PrismaSubscriptionRepository implements ISubscriptionRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prismaClient: PrismaClient = prisma) {}
 
-  async create(subscription: Subscription): Promise<void> {
-    const dto = subscription.toDTO();
-    await this.prisma.subscription.create({
-      data: {
-        id: dto.id,
-        user_id: dto.userId,
-        name: dto.name,
-        price: dto.money.amount,
-        currency: dto.money.currency,
-        payment_cycle: dto.paymentCycle.value,
-        category: dto.category.getValue(),
-        payment_start_date: dto.paymentStartDate,
-        subscribed_at: dto.subscribedAt,
-        updated_at: dto.updatedAt,
-      },
-    });
-  }
-
-  async findById(subscriptionId: string): Promise<Subscription | null> {
-    const subscriptionData = await this.prisma.subscription.findUnique({
+  async findById(subscriptionId: string): Promise<Subscription> {
+    const subscription = await this.prismaClient.subscription.findUnique({
       where: { id: subscriptionId },
     });
 
-    if (!subscriptionData) {
-      return null;
+    if (!subscription) {
+      throw new Error('Subscription not found');
     }
 
-    return this.convertToSubscription(subscriptionData);
+    return Subscription.reconstitute({
+      id: subscription.id,
+      userId: subscription.user_id,
+      name: subscription.name,
+      money: new Money(subscription.price, subscription.currency as Currency),
+      paymentCycle: PaymentCycleValue.create(subscription.payment_cycle),
+      category: SubscriptionCategoryValue.create(subscription.category),
+      paymentStartDate: subscription.payment_start_date,
+      subscribedAt: subscription.subscribed_at,
+      updatedAt: subscription.updated_at,
+    });
   }
 
   async findByUserId(userId: string): Promise<Subscription[]> {
-    const subscriptionsData = await this.prisma.subscription.findMany({
+    const subscriptions = await this.prismaClient.subscription.findMany({
       where: { user_id: userId },
+      orderBy: { updated_at: 'desc' },
     });
 
-    return subscriptionsData.map(data => this.convertToSubscription(data));
+    return subscriptions.map(subscription =>
+      Subscription.reconstitute({
+        id: subscription.id,
+        userId: subscription.user_id,
+        name: subscription.name,
+        money: new Money(subscription.price, subscription.currency as Currency),
+        paymentCycle: PaymentCycleValue.create(subscription.payment_cycle),
+        category: SubscriptionCategoryValue.create(subscription.category),
+        paymentStartDate: subscription.payment_start_date,
+        subscribedAt: subscription.subscribed_at,
+        updatedAt: subscription.updated_at,
+      })
+    );
+  }
+
+  async create(subscription: Subscription): Promise<void> {
+    const dto = subscription.toDTO();
+
+    const data = {
+      id: dto.id,
+      user_id: dto.userId,
+      name: dto.name,
+      price: dto.money.amount,
+      currency: dto.money.currency as Currency,
+      payment_cycle: dto.paymentCycle.value,
+      category: dto.category.getValue(),
+      payment_start_date: dto.paymentStartDate,
+      subscribed_at: dto.subscribedAt,
+      updated_at: dto.updatedAt,
+    };
+
+    await this.prismaClient.subscription.create({
+      data,
+    });
   }
 
   async update(subscription: Subscription): Promise<void> {
     const dto = subscription.toDTO();
-    await this.prisma.subscription.update({
+
+    const data = {
+      user_id: dto.userId,
+      name: dto.name,
+      price: dto.money.amount,
+      currency: dto.money.currency as Currency,
+      payment_cycle: dto.paymentCycle.value,
+      category: dto.category.getValue(),
+      payment_start_date: dto.paymentStartDate,
+      subscribed_at: dto.subscribedAt,
+      updated_at: dto.updatedAt,
+    };
+
+    await this.prismaClient.subscription.update({
       where: { id: dto.id },
-      data: {
-        name: dto.name,
-        price: dto.money.amount,
-        currency: dto.money.currency,
-        payment_cycle: dto.paymentCycle.value,
-        category: dto.category.getValue(),
-        payment_start_date: dto.paymentStartDate,
-        updated_at: new Date(),
-      },
+      data,
     });
   }
 
   async delete(subscriptionId: string): Promise<void> {
-    await this.prisma.subscription.delete({
+    await this.prismaClient.subscription.delete({
       where: { id: subscriptionId },
     });
-  }
-
-  private convertToSubscription(data: PrismaSubscription): Subscription {
-    const money = Money.create(data.price, data.currency);
-    const paymentCycle = PaymentCycleValue.create(data.payment_cycle);
-    const category = SubscriptionCategoryValue.create(data.category);
-
-    const dto: SubscriptionDTO = {
-      id: data.id,
-      userId: data.user_id,
-      name: data.name,
-      money: money,
-      paymentCycle: paymentCycle,
-      category: category,
-      paymentStartDate: data.payment_start_date,
-      subscribedAt: data.subscribed_at,
-      updatedAt: data.updated_at,
-    };
-    return Subscription.reconstitute(dto);
   }
 }

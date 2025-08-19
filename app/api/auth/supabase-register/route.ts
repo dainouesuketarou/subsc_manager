@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { SupabaseAuthService } from '../../../../src/infrastructure/services/SupabaseAuthService';
+import { ApiResponse } from '../../../../src/infrastructure/utils/ApiResponse';
+import { Validation } from '../../../../src/infrastructure/utils/Validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,40 +9,34 @@ export async function POST(request: NextRequest) {
     const { email, password } = body;
 
     // バリデーション
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
+    const validationErrors = Validation.validateFields({
+      email: { value: email, rules: ['required', 'email'] },
+      password: { value: password, rules: ['required', 'password'] },
+    });
 
-    // パスワードの強度チェック
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
+    if (validationErrors.length > 0) {
+      return ApiResponse.validationError(validationErrors[0]);
     }
 
     // Supabase認証を使用
     const result = await SupabaseAuthService.signUp(email, password);
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return ApiResponse.validationError(result.error);
     }
 
     if (!result.user) {
-      return NextResponse.json(
-        { error: 'Registration failed' },
-        { status: 500 }
-      );
+      return ApiResponse.serverError('登録に失敗しました');
     }
 
-    return NextResponse.json({
-      user: result.user,
-      session: result.session,
-      message: 'Registration successful',
-    });
+    return ApiResponse.success(
+      {
+        user: result.user,
+        session: result.session,
+        message: '登録が完了しました',
+      },
+      201
+    );
   } catch (error) {
     console.error('Error in Supabase registration:', error);
 
@@ -51,6 +47,6 @@ export async function POST(request: NextRequest) {
         ? error.message
         : 'Unknown error';
 
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiResponse.serverError(errorMessage);
   }
 }

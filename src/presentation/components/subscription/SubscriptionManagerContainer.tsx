@@ -11,7 +11,7 @@ import { AddSubscriptionForm } from './AddSubscriptionForm';
 import { EditSubscriptionForm } from './EditSubscriptionForm';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { Modal } from '../common/Modal';
-import { SubscriptionData } from '../../types/subscription';
+import { SubscriptionData } from '../../../types/subscription';
 
 export const SubscriptionManagerContainer: React.FC = () => {
   const {

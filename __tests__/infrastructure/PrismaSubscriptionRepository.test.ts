@@ -127,6 +127,7 @@ describe('PrismaSubscriptionRepository', () => {
 
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith({
         where: { user_id: 'user-1' },
+        orderBy: { updated_at: 'desc' },
       });
       expect(result).toHaveLength(2);
       expect(result[0]).toBeInstanceOf(Subscription);
@@ -142,6 +143,7 @@ describe('PrismaSubscriptionRepository', () => {
 
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith({
         where: { user_id: 'user-with-no-subs' },
+        orderBy: { updated_at: 'desc' },
       });
       expect(result).toHaveLength(0);
     });
@@ -165,13 +167,15 @@ describe('PrismaSubscriptionRepository', () => {
       expect(mockPrisma.subscription.update).toHaveBeenCalledWith({
         where: { id: dto.id },
         data: {
+          user_id: dto.userId,
           name: dto.name,
           price: dto.money.amount,
           currency: dto.money.currency,
           payment_cycle: dto.paymentCycle.value,
           category: dto.category.getValue(),
           payment_start_date: dto.paymentStartDate,
-          updated_at: expect.any(Date),
+          subscribed_at: dto.subscribedAt,
+          updated_at: dto.updatedAt,
         },
       });
     });

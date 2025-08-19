@@ -7,27 +7,19 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-
-interface GuestSubscription {
-  id: string;
-  name: string;
-  price: number;
-  currency: string;
-  paymentCycle: string;
-  category: string;
-  paymentStartDate: Date;
-  subscribedAt: string;
-  updatedAt: string;
-}
+import { SubscriptionData } from '../../types/subscription';
 
 interface GuestSubscriptionContextType {
-  subscriptions: GuestSubscription[];
+  subscriptions: SubscriptionData[];
   addSubscription: (
-    subscription: Omit<GuestSubscription, 'id' | 'subscribedAt' | 'updatedAt'>
+    subscription: Omit<
+      SubscriptionData,
+      'id' | 'userId' | 'createdAt' | 'updatedAt' | 'subscribedAt'
+    >
   ) => void;
   updateSubscription: (
     id: string,
-    subscription: Partial<GuestSubscription>
+    subscription: Partial<SubscriptionData>
   ) => void;
   deleteSubscription: (id: string) => void;
   clearAllSubscriptions: () => void;
@@ -54,7 +46,7 @@ interface GuestSubscriptionProviderProps {
 export const GuestSubscriptionProvider: React.FC<
   GuestSubscriptionProviderProps
 > = ({ children }) => {
-  const [subscriptions, setSubscriptions] = useState<GuestSubscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
 
   useEffect(() => {
     // ローカルストレージからゲストサブスクリプションを復元
@@ -64,7 +56,7 @@ export const GuestSubscriptionProvider: React.FC<
     }
   }, []);
 
-  const saveToLocalStorage = (newSubscriptions: GuestSubscription[]) => {
+  const saveToLocalStorage = (newSubscriptions: SubscriptionData[]) => {
     localStorage.setItem(
       'guestSubscriptions',
       JSON.stringify(newSubscriptions)
@@ -72,13 +64,19 @@ export const GuestSubscriptionProvider: React.FC<
   };
 
   const addSubscription = (
-    subscription: Omit<GuestSubscription, 'id' | 'subscribedAt' | 'updatedAt'>
+    subscription: Omit<
+      SubscriptionData,
+      'id' | 'userId' | 'createdAt' | 'updatedAt' | 'subscribedAt'
+    >
   ) => {
-    const newSubscription: GuestSubscription = {
+    const now = new Date();
+    const newSubscription: SubscriptionData = {
       ...subscription,
       id: `guest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      subscribedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      userId: 'guest',
+      createdAt: now,
+      updatedAt: now,
+      subscribedAt: now,
     };
 
     const updatedSubscriptions = [...subscriptions, newSubscription];
@@ -88,12 +86,10 @@ export const GuestSubscriptionProvider: React.FC<
 
   const updateSubscription = (
     id: string,
-    updates: Partial<GuestSubscription>
+    updates: Partial<SubscriptionData>
   ) => {
     const updatedSubscriptions = subscriptions.map(sub =>
-      sub.id === id
-        ? { ...sub, ...updates, updatedAt: new Date().toISOString() }
-        : sub
+      sub.id === id ? { ...sub, ...updates, updatedAt: new Date() } : sub
     );
     setSubscriptions(updatedSubscriptions);
     saveToLocalStorage(updatedSubscriptions);

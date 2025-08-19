@@ -4,17 +4,7 @@ import { Subscription } from '../../domain/entities/Subscription';
 import { Money } from '../../domain/value-objects/Money';
 import { PaymentCycleValue } from '../../domain/value-objects/PaymentCycle';
 import { SubscriptionCategoryValue } from '../../domain/value-objects/SubscriptionCategory';
-
-export interface UpdateSubscriptionRequest {
-  subscriptionId: string;
-  userId: string;
-  name: string;
-  price: number;
-  currency: string;
-  paymentCycle: string;
-  category: string;
-  paymentStartDate?: string;
-}
+import { UpdateSubscriptionDTO } from '../dto/subscription';
 
 export interface UpdateSubscriptionResponse {
   success: boolean;
@@ -27,10 +17,10 @@ export class UpdateSubscriptionUseCase {
   ) {}
 
   async execute(
-    request: UpdateSubscriptionRequest
+    request: UpdateSubscriptionDTO
   ): Promise<UpdateSubscriptionResponse> {
     const {
-      subscriptionId,
+      id: subscriptionId,
       userId,
       name,
       price,
@@ -48,7 +38,7 @@ export class UpdateSubscriptionUseCase {
       throw new Error('ユーザーIDは必須です');
     }
 
-    if (!name || !price || !currency || !paymentCycle) {
+    if (!name || !price || !currency || !paymentCycle || !category) {
       throw new Error('必須フィールドが不足しています');
     }
 

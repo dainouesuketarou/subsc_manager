@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { PrismaSubscriptionRepository } from '../../../src/infrastructure/PrismaSubscriptionRepository';
 import { PrismaUserRepository } from '../../../src/infrastructure/PrismaUserRepository';
 import { RegisterSubscriptionUseCase } from '../../../src/application/usecase/RegisterSubscriptionUseCase';
@@ -8,8 +6,12 @@ import {
   SupabaseAuthMiddleware,
   AuthenticatedRequest,
 } from '../../../src/infrastructure/middleware/SupabaseAuthMiddleware';
+import { ApiResponse } from '../../../src/infrastructure/utils/ApiResponse';
+import { Validation } from '../../../src/infrastructure/utils/Validation';
+import { prisma } from '../../../src/infrastructure/utils/PrismaClient';
+import { CreateSubscriptionDTO } from '../../../src/application/dto/subscription';
 
-const prisma = new PrismaClient();
+// リポジトリとユースケースのインスタンス化
 const subscriptionRepository = new PrismaSubscriptionRepository(prisma);
 const userRepository = new PrismaUserRepository(prisma);
 const registerUseCase = new RegisterSubscriptionUseCase(
@@ -21,46 +23,44 @@ const getSubscriptionsUseCase = new GetSubscriptionsUseCase(
   userRepository
 );
 
-async function handleGet(request: AuthenticatedRequest) {
+export async function handleGet(request: AuthenticatedRequest) {
   try {
     const result = await getSubscriptionsUseCase.execute({
       userId: request.user!.id,
     });
 
-    return NextResponse.json(result);
+    return ApiResponse.success(result);
   } catch (error) {
-    console.error('Error fetching subscriptions:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    // テスト環境ではエラーログを抑制
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error fetching subscriptions:', error);
+    }
+    return ApiResponse.serverError('サブスクリプションの取得に失敗しました');
   }
 }
 
 export const GET = SupabaseAuthMiddleware.withAuth(handleGet);
 
-async function handlePost(request: AuthenticatedRequest) {
+export async function handlePost(request: AuthenticatedRequest) {
   try {
     const body = await request.json();
     const { name, price, currency, paymentCycle, category, paymentStartDate } =
       body;
 
     // バリデーション
-    if (!name || !price || !currency || !paymentCycle || !category) {
-      return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      );
+    const validationErrors = Validation.validateFields({
+      name: { value: name, rules: ['required'] },
+      price: { value: price, rules: ['required', 'positiveNumber'] },
+      currency: { value: currency, rules: ['required'] },
+      paymentCycle: { value: paymentCycle, rules: ['required'] },
+      category: { value: category, rules: ['required'] },
+    });
+
+    if (validationErrors.length > 0) {
+      return ApiResponse.validationError(validationErrors[0]);
     }
 
-    if (typeof price !== 'number' || price <= 0) {
-      return NextResponse.json(
-        { error: 'Price must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    const result = await registerUseCase.execute({
+    const createRequest: CreateSubscriptionDTO = {
       userId: request.user!.id,
       userEmail: request.user!.email,
       name,
@@ -69,25 +69,27 @@ async function handlePost(request: AuthenticatedRequest) {
       paymentCycle,
       category,
       paymentStartDate,
-    });
+    };
 
-    return NextResponse.json(result, { status: 201 });
+    const result = await registerUseCase.execute(createRequest);
+
+    return ApiResponse.success(result, 201);
   } catch (error) {
-    console.error('Error registering subscription:', error);
+    // テスト環境ではエラーログを抑制
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error registering subscription:', error);
+    }
 
     if (error instanceof Error) {
       if (
         error.message.includes('Invalid payment cycle') ||
         error.message.includes('Invalid currency')
       ) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return ApiResponse.validationError(error.message);
       }
     }
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return ApiResponse.serverError('サブスクリプションの登録に失敗しました');
   }
 }
 

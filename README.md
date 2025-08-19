@@ -1,150 +1,140 @@
-# サブスクリプション管理アプリ
+# サブスクリプション管理アプリケーション
 
-サブスクリプションサービスを管理するためのWebアプリケーションです。
+## プロジェクト概要
 
-## 機能
+このプロジェクトは、ユーザーがサブスクリプションサービスを管理できるWebアプリケーションです。クリーンアーキテクチャの原則に従って設計されており、保守性と拡張性を重視しています。
 
-- サブスクリプションの登録・編集・削除
-- カレンダー表示による支払日管理
-- リアルタイム為替レートによる通貨変換
-- カテゴリー別の分類と色分け表示
-- 月間支払額の合計表示
-- レスポンシブデザイン対応
-- **Supabase認証**（Email/Password）
+## アーキテクチャ
+
+### レイヤー構造
+
+```
+src/
+├── types/              # 共通型定義（全レイヤーで使用）
+│   ├── common.ts       # 共通型定義
+│   ├── subscription.ts # サブスクリプション関連型定義
+│   ├── auth.ts         # 認証関連型定義
+│   └── api.ts          # API関連型定義
+├── domain/             # ドメイン層（ビジネスロジック）
+│   ├── entities/       # エンティティ
+│   ├── value-objects/  # バリューオブジェクト
+│   └── repositories/   # リポジトリインターフェース
+├── application/        # アプリケーション層（ユースケース）
+│   ├── usecase/        # ユースケース
+│   └── dto/            # DTO（Data Transfer Objects）
+├── infrastructure/     # インフラストラクチャ層（外部依存）
+│   ├── services/       # 外部サービス
+│   ├── middleware/     # ミドルウェア
+│   ├── repositories/   # リポジトリ実装
+│   ├── utils/          # ユーティリティ
+│   └── supabase/       # Supabase設定
+└── presentation/       # プレゼンテーション層（UI）
+    ├── components/     # Reactコンポーネント
+    ├── contexts/       # Reactコンテキスト
+    └── hooks/          # カスタムフック
+```
+
+## 主要な改善点
+
+### 1. 共通型定義の統合
+
+- **`src/types/`**: 全レイヤーで使用できる共通型定義
+- **型安全性の向上**: 一貫した型定義による開発効率の向上
+- **重複の排除**: 重複した型定義の削除
+
+### 2. DTOの導入
+
+- **`src/application/dto/`**: データ転送オブジェクトの専用ディレクトリ
+- **レイヤー間の境界**: 明確なデータ転送の境界
+- **型安全性**: アプリケーション層での型安全なデータ処理
+
+### 3. 共通ユーティリティの導入
+
+- **ApiResponse**: APIレスポンスの統一化
+- **Validation**: バリデーションロジックの共通化
+- **ErrorHandler**: エラーハンドリングの統一化
+- **PrismaClient**: シングルトンインスタンスの管理
+
+### 4. 認証ロジックの簡素化
+
+- SupabaseAuthMiddlewareの簡素化
+- 共通のSupabaseクライアントの使用
+- エラーハンドリングの統一
+
+### 5. APIルートの改善
+
+- 共通ユーティリティの活用
+- バリデーションの統一
+- エラーレスポンスの一貫性
+
+### 6. プレゼンテーション層の整理
+
+- 型定義の統一
+- コンテキストの型安全性向上
+- フックの型安全性向上
 
 ## 技術スタック
 
-- **フロントエンド**: Next.js 14, React, TypeScript, Tailwind CSS
-- **バックエンド**: Next.js API Routes
-- **データベース**: Supabase PostgreSQL
+- **フレームワーク**: Next.js 14
+- **データベース**: PostgreSQL (Supabase)
+- **ORM**: Prisma
 - **認証**: Supabase Auth
-- **為替レート**: ExchangeRate-API.com
+- **言語**: TypeScript
+- **スタイリング**: Tailwind CSS
 
-## セットアップ
+## 開発環境のセットアップ
 
-### 1. リポジトリのクローン
-
-```bash
-git clone <repository-url>
-cd subsc-manager
-```
-
-### 2. 依存関係のインストール
+1. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-### 3. Supabaseプロジェクトの設定
+2. 環境変数の設定
 
-1. [Supabase](https://supabase.com)でアカウントを作成
-2. 新しいプロジェクトを作成
-3. プロジェクトURLとAPIキーを取得
-
-### 4. 環境変数の設定
-
-プロジェクトのルートに`.env`ファイルを作成し、以下の内容を設定してください：
-
-```env
-# Supabase設定
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# データベース接続（Supabase PostgreSQL）
-# アプリケーションからの接続用（Connection Pooler経由）
-DATABASE_URL=postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-
-# マイグレーション用（直接接続）
-DIRECT_URL=postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
-
-# ExchangeRate-API.com のAPIキー
-# https://www.exchangerate-api.com/ でサインアップしてAPIキーを取得してください
-EXCHANGE_RATE_API_KEY=your_api_key_here
+```bash
+cp .env.example .env.local
 ```
 
-### 5. データベースのセットアップ
+3. データベースのセットアップ
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-### 6. 開発サーバーの起動
+4. 開発サーバーの起動
 
 ```bash
 npm run dev
 ```
 
-アプリケーションは <http://localhost:3000> で起動します。
-
-## Supabase認証への移行
-
-### 移行手順
-
-1. **Supabaseプロジェクトの作成**
-   - Supabaseダッシュボードでプロジェクトを作成
-   - Authentication > SettingsでEmail認証を有効化
-
-2. **環境変数の設定**
-   - `.env`ファイルにSupabase設定を追加
-
-3. **データベースの移行**
-   - 既存のSQLiteデータをSupabase PostgreSQLに移行
-
-4. **認証システムの切り替え**
-   - 既存のJWT認証からSupabase認証に切り替え
-
-詳細な移行手順は[移行ガイド](./MIGRATION_GUIDE.md)を参照してください。
-
-## 使用方法
-
-### サブスクリプションの登録
-
-1. 「サブスクを追加」ボタンをクリック
-2. サービス名、料金、通貨、支払いサイクル、カテゴリーを入力
-3. 支払い開始日を設定
-4. 登録ボタンをクリック
-
-### カレンダー表示
-
-- カレンダーには支払日がハイライト表示されます
-- 月の合計支払額が上部に表示されます
-- カテゴリー別の支払額が表示されます
-
-### 為替レート機能
-
-- 全ての通貨が円（JPY）に自動変換されます
-- リアルタイムの為替レートを使用（APIキー設定時）
-- APIキー未設定時は固定レートを使用
-
 ## テスト
 
 ```bash
-# 全テストの実行
 npm test
+```
 
-# 特定のテストファイルの実行
-npm test -- --testPathPatterns="ExchangeRateService"
+## ビルド
+
+```bash
+npm run build
 ```
 
 ## デプロイ
 
-### Vercel
-
-1. Vercelにプロジェクトを接続
-2. 環境変数を設定
-3. デプロイ
-
-### その他のプラットフォーム
-
-- Railway
-- Netlify
-- AWS Amplify
-
-## ライセンス
-
-MIT License
+```bash
+npm run start
+```
 
 ## 貢献
 
-プルリクエストやイシューの報告を歓迎します。
+1. このリポジトリをフォーク
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。

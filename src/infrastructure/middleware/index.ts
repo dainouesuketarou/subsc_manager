@@ -1,0 +1,1 @@
+export { SupabaseAuthMiddleware } from './SupabaseAuthMiddleware';

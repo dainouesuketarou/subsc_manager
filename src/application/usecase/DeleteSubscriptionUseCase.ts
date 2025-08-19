@@ -1,10 +1,6 @@
 import { ISubscriptionRepository } from '../../domain/repositories/ISubscriptionRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
-
-export interface DeleteSubscriptionRequest {
-  subscriptionId: string;
-  userId: string;
-}
+import { DeleteSubscriptionDTO } from '../dto/subscription';
 
 export interface DeleteSubscriptionResponse {
   success: boolean;
@@ -17,7 +13,7 @@ export class DeleteSubscriptionUseCase {
   ) {}
 
   async execute(
-    request: DeleteSubscriptionRequest
+    request: DeleteSubscriptionDTO
   ): Promise<DeleteSubscriptionResponse> {
     const { subscriptionId, userId } = request;
 

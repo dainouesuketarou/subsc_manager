@@ -8,10 +8,10 @@ import React, {
   ReactNode,
 } from 'react';
 import { SupabaseAuthService } from '../../infrastructure/services/SupabaseAuthService';
-import { User } from '../../infrastructure/supabase/client';
+import { AuthUser } from '../../types/auth';
 
 interface UnifiedAuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
@@ -39,7 +39,7 @@ interface UnifiedAuthProviderProps {
 export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 初期セッション取得
@@ -47,7 +47,14 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
     const initializeAuth = async () => {
       try {
         const { user: sessionUser } = await SupabaseAuthService.getSession();
-        setUser(sessionUser);
+        if (sessionUser) {
+          setUser({
+            id: sessionUser.id,
+            email: sessionUser.email,
+            createdAt: new Date(sessionUser.created_at),
+            updatedAt: new Date(sessionUser.updated_at),
+          });
+        }
       } catch (error) {
         console.error('Failed to get session:', error);
       } finally {
@@ -71,7 +78,12 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
       }
 
       if (authUser) {
-        setUser(authUser);
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          createdAt: new Date(authUser.created_at),
+          updatedAt: new Date(authUser.updated_at),
+        });
         return {};
       } else {
         return { error: 'ログインに失敗しました' };
@@ -103,7 +115,12 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({
       }
 
       // 即座にログインされる場合
-      setUser(authUser);
+      setUser({
+        id: authUser.id,
+        email: authUser.email,
+        createdAt: new Date(authUser.created_at),
+        updatedAt: new Date(authUser.updated_at),
+      });
       return {};
     } catch (error) {
       console.error('Sign up exception:', error);

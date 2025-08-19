@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
-import { SubscriptionData } from '../../types/subscription';
+import { SubscriptionData } from '../../../types/subscription';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;

@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { SupabaseAuthService } from '../../../../src/infrastructure/services/SupabaseAuthService';
+import { ApiResponse } from '../../../../src/infrastructure/utils/ApiResponse';
+import { Validation } from '../../../../src/infrastructure/utils/Validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,28 +9,27 @@ export async function POST(request: NextRequest) {
     const { email, password } = body;
 
     // バリデーション
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+    const validationErrors = Validation.validateFields({
+      email: { value: email, rules: ['required', 'email'] },
+      password: { value: password, rules: ['required', 'password'] },
+    });
+
+    if (validationErrors.length > 0) {
+      return ApiResponse.validationError(validationErrors[0]);
     }
 
     // Supabase認証を使用
     const result = await SupabaseAuthService.signIn(email, password);
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return ApiResponse.validationError(result.error);
     }
 
     if (!result.user) {
-      return NextResponse.json(
-        { error: 'Authentication failed' },
-        { status: 401 }
-      );
+      return ApiResponse.unauthorized('認証に失敗しました');
     }
 
-    return NextResponse.json({
+    return ApiResponse.success({
       user: result.user,
       session: result.session,
     });
@@ -42,6 +43,6 @@ export async function POST(request: NextRequest) {
         ? error.message
         : 'Unknown error';
 
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiResponse.serverError(errorMessage);
   }
 }
